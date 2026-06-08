@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SENTRA — Core Execution Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { font-family: var(--font-body); box-sizing: border-box; }
+.mono { font-family: var(--font-mono); }
+.display-font { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+[data-theme="dark"] {
+  --bg: #020617; --bg-elevated: #0f172a; --bg-hover: #1e293b;
+  --border: #1e293b; --border-hover: #334155;
+  --text: #e2e8f0; --text-muted: #94a3b8; --text-dim: #64748b;
+  --accent: #6366f1; --accent-2: #8b5cf6;
+  --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6;
+  --ai: #a855f7; --ai-2: #ec4899;
+}
+[data-theme="light"] {
+  --bg: #f8fafc; --bg-elevated: #ffffff; --bg-hover: #f1f5f9;
+  --border: #e2e8f0; --border-hover: #cbd5e1;
+  --text: #0f172a; --text-muted: #475569; --text-dim: #94a3b8;
+  --accent: #6366f1; --accent-2: #8b5cf6;
+  --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6;
+  --ai: #a855f7; --ai-2: #ec4899;
+}
+
+body { background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; margin: 0; }
+.scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.scroll::-webkit-scrollbar-track { background: transparent; }
+.scroll::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
+html { scroll-behavior: smooth; }
+
+/* Typography */
+.text-display-xl { font-family: var(--font-display); font-size: 3.5rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+.text-display-lg { font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; }
+.text-display-md { font-family: var(--font-display); font-size: 1.875rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.text-display-sm { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.015em; line-height: 1.3; }
+.text-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.text-micro { font-size: 10px; font-weight: 500; letter-spacing: 0.02em; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleInBounce { 0% { opacity: 0; transform: scale(0.8); } 70% { transform: scale(1.03); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes sparkle { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.15); } }
+@keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); } 50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); } }
+@keyframes borderPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); } 50% { box-shadow: 0 0 0 6px rgba(99,102,241,0); } }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes checkmark { 0% { stroke-dashoffset: 50; } 100% { stroke-dashoffset: 0; } }
+@keyframes progressPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+@keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+
+.stagger > * { opacity: 0; animation: fadeInUp 0.4s ease forwards; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger > *:nth-child(8) { animation-delay: 0.4s; }
+
+.fade-in { animation: fadeIn 0.25s ease-out; }
+.fade-in-up { animation: fadeInUp 0.35s ease-out; }
+.fade-in-down { animation: fadeInDown 0.35s ease-out; }
+.slide-in-left { animation: slideInLeft 0.4s ease-out; }
+.slide-in-right { animation: slideInRight 0.3s ease-out; }
+.scale-in { animation: scaleInBounce 0.35s ease-out; }
+.animate-pulse { animation: pulse 2s infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.page-transition { animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.btn-ripple { position: relative; overflow: hidden; }
+.btn-ripple .ripple-effect { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.35); transform: scale(0); animation: ripple 0.6s linear; pointer-events: none; }
+
+.card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.card:hover { border-color: var(--border-hover); }
+.card-hover { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.2); border-color: var(--border-hover); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; padding: 0.5rem 0.875rem; border-radius: 8px; font-size: 13px; font-weight: 500; transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; white-space: nowrap; position: relative; overflow: hidden; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.4); }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 20px -6px rgba(99,102,241,0.5); }
+.btn-primary:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+.btn-ai { background: linear-gradient(135deg, var(--ai), var(--ai-2)); color: white; box-shadow: 0 4px 12px -4px rgba(168,85,247,0.5); background-size: 200% 200%; animation: gradientShift 3s ease infinite; }
+.btn-ai:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-ghost { color: var(--text-muted); background: transparent; }
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text); }
+.btn-subtle { background: var(--bg-hover); color: var(--text); border: 1px solid var(--border); }
+.btn-subtle:hover:not(:disabled) { background: var(--border-hover); border-color: var(--border-hover); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover:not(:disabled) { filter: brightness(1.1); }
+
+input, select, textarea { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 13px; width: 100%; transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); transform: translateY(-1px); }
+input::placeholder, textarea::placeholder { color: var(--text-dim); }
+select { cursor: pointer; }
+
+.form-label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 0.375rem; color: var(--text); letter-spacing: -0.005em; }
+.form-required { color: var(--danger); margin-left: 2px; }
+.form-hint { font-size: 11px; color: var(--text-dim); margin-top: 0.25rem; }
+
+.tags-input { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.375rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); min-height: 40px; cursor: text; transition: all 0.18s; }
+.tags-input:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.tag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; background: rgba(99,102,241,0.15); color: var(--accent); border-radius: 999px; font-size: 11px; font-weight: 500; animation: scaleInBounce 0.2s ease; }
+.tag-remove { cursor: pointer; opacity: 0.7; font-size: 10px; }
+.tag-remove:hover { opacity: 1; }
+.tags-input input { border: none; background: transparent; padding: 0.125rem 0.25rem; flex: 1; min-width: 80px; font-size: 12px; }
+.tags-input input:focus { box-shadow: none; transform: none; }
+
+.step-row { display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.75rem; background: var(--bg-hover); border-radius: 8px; margin-bottom: 0.5rem; animation: fadeInUp 0.3s ease-out; position: relative; }
+.step-number { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.step-content { flex: 1; display: flex; flex-direction: column; gap: 0.375rem; }
+.step-remove { color: var(--danger); cursor: pointer; padding: 0.25rem; opacity: 0.6; }
+.step-remove:hover { opacity: 1; }
+
+/* Icon wrapper */
+.icon-wrap { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 0; }
+.icon-wrap svg { stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Icon containers with backgrounds */
+.icon-container { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; flex-shrink: 0; }
+.icon-container-xs { width: 20px; height: 20px; font-size: 10px; }
+.icon-container-sm { width: 24px; height: 24px; font-size: 12px; }
+.icon-container-md { width: 32px; height: 32px; font-size: 16px; }
+.icon-container-lg { width: 40px; height: 40px; font-size: 20px; }
+.icon-container-xl { width: 48px; height: 48px; font-size: 24px; }
+
+.pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 11px; font-weight: 600; letter-spacing: 0.01em; border: 1px solid transparent; white-space: nowrap; }
+.pill-pass { background: rgba(16,185,129,0.1); color: var(--success); border-color: rgba(16,185,129,0.2); }
+.pill-fail { background: rgba(239,68,68,0.1); color: var(--danger); border-color: rgba(239,68,68,0.2); }
+.pill-block { background: rgba(245,158,11,0.1); color: var(--warning); border-color: rgba(245,158,11,0.2); }
+.pill-run { background: rgba(99,102,241,0.1); color: var(--accent); border-color: rgba(99,102,241,0.2); }
+.pill-pend { background: rgba(100,116,139,0.1); color: var(--text-muted); border-color: rgba(100,116,139,0.2); }
+.pill-info { background: rgba(59,130,246,0.1); color: var(--info); border-color: rgba(59,130,246,0.2); }
+.pill-ai { background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(236,72,153,0.15)); color: var(--ai); border-color: rgba(168,85,247,0.3); }
+.pill-critical { background: rgba(239,68,68,0.15); color: var(--danger); border-color: rgba(239,68,68,0.3); font-weight: 700; }
+
+.nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; margin: 0.125rem 0.5rem; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; letter-spacing: -0.005em; color: var(--text-muted); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+.nav-item:hover { background: var(--bg-hover); color: var(--text); transform: translateX(2px); }
+.nav-item.active { background: linear-gradient(90deg, rgba(99,102,241,0.15), transparent); color: var(--text); font-weight: 600; animation: slideInFromLeft 0.3s ease-out; }
+.nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--accent); border-radius: 0 3px 3px 0; }
+.nav-item.active .nav-icon { color: var(--accent); }
+.nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+.nav-item.locked:hover { transform: none; background: transparent; }
+
+.kbd { display: inline-flex; align-items: center; justify-content: center; padding: 1px 6px; background: var(--bg-hover); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+
+#toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { pointer-events: auto; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 32px -8px rgba(0,0,0,0.3); min-width: 280px; max-width: 400px; animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.toast.removing { animation: slideInRight 0.2s ease-in reverse; opacity: 0; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(2,6,23,0.75); backdrop-filter: blur(8px); z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; animation: fadeIn 0.2s ease-out; overflow-y: auto; }
+.modal-content { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; width: 700px; max-width: 100%; max-height: calc(100vh - 80px); overflow-y: auto; box-shadow: 0 32px 64px -16px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05); animation: scaleInBounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); margin-bottom: 40px; }
+.modal-small { max-width: 440px; }
+
+.focus-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 800; display: flex; flex-direction: column; animation: fadeIn 0.25s ease-out; }
+
+.cmd-result { padding: 0.625rem 0.75rem; border-radius: 8px; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; transition: all 0.15s; }
+.cmd-result:hover, .cmd-result.selected { background: var(--bg-hover); transform: translateX(2px); }
+
+.theme-toggle { position: relative; width: 40px; height: 22px; background: var(--border); border-radius: 999px; cursor: pointer; transition: background 0.25s; }
+.theme-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: white; border-radius: 999px; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+[data-theme="dark"] .theme-toggle { background: var(--accent); }
+[data-theme="dark"] .theme-toggle::after { transform: translateX(18px); }
+
+.progress-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--bg-hover); }
+.progress-bar-sm { height: 4px; }
+.progress-bar-lg { height: 8px; }
+
+.heatmap-grid { display: grid; gap: 4px; }
+.heat-cell { aspect-ratio: 1; border-radius: 4px; cursor: pointer; transition: all 0.15s; position: relative; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: white; }
+.heat-cell:hover { transform: scale(1.15); z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.heat-cell .tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-elevated); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s; margin-bottom: 6px; color: var(--text); z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.heat-cell:hover .tooltip { opacity: 1; }
+
+.timeline-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; transition: all 0.2s; }
+.timeline-row:hover { background: var(--bg-hover); border-radius: 4px; }
+.timeline-label { width: 180px; font-size: 12px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timeline-track { flex: 1; height: 24px; background: var(--bg-hover); border-radius: 4px; position: relative; overflow: hidden; }
+.timeline-bar { position: absolute; height: 100%; border-radius: 3px; display: flex; align-items: center; padding: 0 8px; font-family: var(--font-mono); font-size: 10px; color: white; font-weight: 500; transition: filter 0.15s; }
+.timeline-bar:hover { filter: brightness(1.15); }
+.timeline-axis { display: flex; justify-content: space-between; padding: 4px 0 4px 192px; font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
+
+.date-picker { display: inline-flex; gap: 4px; background: var(--bg-hover); padding: 3px; border-radius: 8px; border: 1px solid var(--border); }
+.date-picker button { padding: 4px 10px; font-size: 11px; font-weight: 500; border-radius: 5px; color: var(--text-muted); background: transparent; cursor: pointer; transition: all 0.18s; border: none; }
+.date-picker button:hover { color: var(--text); }
+.date-picker button.active { background: var(--bg-elevated); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+.live-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+
+.checkbox-custom { width: 16px; height: 16px; border: 2px solid var(--border-hover); border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.18s; flex-shrink: 0; background: transparent; }
+.checkbox-custom:hover { border-color: var(--accent); transform: scale(1.1); }
+.checkbox-custom.checked { background: var(--accent); border-color: var(--accent); animation: scaleInBounce 0.25s ease; }
+.checkbox-custom.checked::after { content: ''; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg); margin-top: -2px; }
+.checkbox-custom.partial { background: var(--accent); border-color: var(--accent); }
+.checkbox-custom.partial::after { content: ''; width: 8px; height: 2px; background: white; border-radius: 1px; }
+
+.bulk-action-bar { position: sticky; bottom: 0; background: var(--bg-elevated); border-top: 1px solid var(--accent); padding: 12px 16px; display: flex; align-items: center; gap: 12px; z-index: 10; animation: fadeInUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 -4px 20px rgba(0,0,0,0.25); border-radius: 12px 12px 0 0; }
+
+.drop-zone { border: 2px dashed var(--border-hover); border-radius: 8px; padding: 24px; text-align: center; transition: all 0.25s; cursor: pointer; background: transparent; }
+.drop-zone:hover { border-color: var(--accent); background: rgba(99,102,241,0.03); }
+.drop-zone.dragging { border-color: var(--accent); background: rgba(99,102,241,0.08); }
+
+.test-row { transition: all 0.2s; }
+.test-row.selected { background: rgba(99,102,241,0.08); border-left: 2px solid var(--accent); }
+.test-row.expanded { background: var(--bg-hover); }
+.test-row:hover { background: var(--bg-hover); }
+
+.comment-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-size: 12px; animation: fadeInUp 0.25s ease; }
+
+.tree-node { display: flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.15s; position: relative; }
+.tree-node:hover { background: var(--bg-hover); transform: translateX(2px); }
+.tree-node.selected { background: rgba(99,102,241,0.15); border-left: 2px solid var(--accent); }
+
+.evidence-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px; animation: fadeInUp 0.25s ease; }
+.hash-display { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); word-break: break-all; }
+
+.deploy-step-card { transition: all 0.3s ease; border: 1px solid var(--border); }
+.deploy-step-card.running { border-color: var(--accent); box-shadow: 0 0 20px -6px rgba(99,102,241,0.4); animation: borderPulse 2s infinite; }
+.deploy-step-card.completed { border-color: rgba(16,185,129,0.3); }
+.deploy-step-card.pending { opacity: 0.6; }
+.timer-display { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--accent); animation: progressPulse 2s infinite; }
+
+.approval-chain { display: flex; flex-direction: column; gap: 12px; position: relative; padding-left: 24px; }
+.approval-chain::before { content: ''; position: absolute; left: 10px; top: 24px; bottom: 8px; width: 2px; background: var(--border); }
+.approval-node { position: relative; animation: fadeInUp 0.3s ease; }
+.approval-node::before { content: ''; position: absolute; left: -19px; top: 8px; width: 14px; height: 14px; border-radius: 999px; background: var(--bg-elevated); border: 2px solid var(--border); z-index: 1; }
+.approval-node.approved::before { background: var(--success); border-color: var(--success); }
+.approval-node.rejected::before { background: var(--danger); border-color: var(--danger); }
+.approval-node.pending::before { background: var(--bg-elevated); border-color: var(--warning); animation: pulse 2s infinite; }
+
+.diff-line { display: flex; padding: 2px 8px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; transition: all 0.15s; }
+.diff-line.added { background: rgba(16,185,129,0.08); border-left: 3px solid var(--success); }
+.diff-line.removed { background: rgba(239,68,68,0.08); border-left: 3px solid var(--danger); }
+.diff-line.modified { background: rgba(245,158,11,0.08); border-left: 3px solid var(--warning); }
+.diff-line.context { border-left: 3px solid transparent; color: var(--text-muted); }
+.diff-line:hover { background: var(--bg-hover); }
+.diff-line .line-num { width: 36px; color: var(--text-dim); flex-shrink: 0; user-select: none; }
+.diff-line .line-content { flex: 1; }
+
+.notif-dropdown { position: absolute; top: 100%; right: 0; width: 400px; max-height: 500px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 20px 40px -8px rgba(0,0,0,0.4); z-index: 100; animation: slideDown 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); overflow: hidden; margin-top: 8px; }
+.notif-item { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.15s; position: relative; }
+.notif-item:hover { background: var(--bg-hover); transform: translateX(2px); }
+.notif-item:last-child { border-bottom: none; }
+.notif-item.unread { background: rgba(99,102,241,0.04); }
+.notif-item.unread::before { content: ''; position: absolute; left: 6px; top: 18px; width: 6px; height: 6px; border-radius: 999px; background: var(--accent); animation: pulse 2s infinite; }
+.notif-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.filter-panel { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; animation: slideDown 0.25s ease-out; }
+.filter-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 999px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.18s; }
+.filter-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+.filter-chip.active { background: rgba(99,102,241,0.15); border-color: var(--accent); color: var(--accent); animation: scaleInBounce 0.2s ease; }
+
+.fab-container { position: fixed; bottom: 24px; right: 24px; z-index: 50; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.fab-main { width: 56px; height: 56px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 24px -4px rgba(99,102,241,0.5); transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.fab-main:hover { transform: scale(1.1) rotate(90deg); }
+.fab-main.open { transform: rotate(45deg); background: var(--danger); }
+.fab-menu { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.fab-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; box-shadow: 0 4px 12px -2px rgba(0,0,0,0.3); transition: all 0.2s; animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap; }
+.fab-item:hover { transform: translateX(-4px); border-color: var(--accent); }
+.fab-item .fab-icon { width: 28px; height: 28px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: var(--bg-hover); }
+
+.mobile-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-elevated); border-top: 1px solid var(--border); z-index: 40; padding: 8px 0; backdrop-filter: blur(10px); }
+.mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; font-size: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+.mobile-nav-item.active { color: var(--accent); transform: translateY(-2px); }
+@media (max-width: 768px) {
+  .mobile-bottom-nav { display: flex; }
+  .desktop-sidebar { display: none !important; }
+  body { padding-bottom: 64px; }
+  .fab-container { bottom: 80px; }
+  .copilot-panel { bottom: 80px !important; }
+  .text-display-xl { font-size: 2.25rem; }
+  .text-display-lg { font-size: 1.875rem; }
+  .text-display-md { font-size: 1.5rem; }
+}
+
+.empty-state { padding: 60px 20px; text-align: center; animation: fadeInUp 0.4s ease-out; }
+.empty-illustration { width: 120px; height: 120px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1)); border-radius: 999px; animation: float 3s ease-in-out infinite; }
+
+.widget-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.widget-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 12px 28px -8px rgba(0,0,0,0.2); }
+.widget-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.widget-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+.ai-sparkle { display: inline-block; animation: sparkle 2s ease-in-out infinite; }
+.ai-gradient-text { background: linear-gradient(135deg, var(--ai), var(--ai-2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+.copilot-trigger { width: 56px; height: 56px; border-radius: 999px; background: linear-gradient(135deg, var(--ai), var(--ai-2)); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 8px 24px -4px rgba(168,85,247,0.6); transition: all 0.25s; animation: glowPulse 3s infinite; background-size: 200% 200%; position: relative; }
+.copilot-trigger:hover { transform: scale(1.1); }
+
+.copilot-panel { position: fixed; right: 24px; bottom: 100px; width: 420px; height: 600px; max-height: calc(100vh - 140px); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 32px 64px -16px rgba(0,0,0,0.5); z-index: 950; display: flex; flex-direction: column; animation: slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); overflow: hidden; }
+@media (max-width: 500px) { .copilot-panel { right: 8px; left: 8px; width: auto; bottom: 80px; } }
+.copilot-header { padding: 14px 16px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(236,72,153,0.08)); display: flex; align-items: center; gap: 10px; }
+.copilot-logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--ai), var(--ai-2)); display: flex; align-items: center; justify-content: center; color: white; background-size: 200% 200%; animation: gradientShift 3s ease infinite; }
+.copilot-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.copilot-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; animation: fadeInUp 0.3s ease-out; }
+.copilot-msg.user { align-self: flex-end; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border-bottom-right-radius: 4px; }
+.copilot-msg.ai { align-self: flex-start; background: var(--bg-hover); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.copilot-msg.ai code { background: var(--bg); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 11px; }
+.copilot-msg.ai ul { margin: 6px 0; padding-left: 18px; }
+.copilot-msg.ai li { margin: 3px 0; }
+.copilot-typing { display: flex; gap: 4px; padding: 12px 14px; align-self: flex-start; background: var(--bg-hover); border-radius: 12px; border: 1px solid var(--border); }
+.copilot-typing span { width: 6px; height: 6px; border-radius: 999px; background: var(--ai); animation: pulse 1.4s infinite; }
+.copilot-typing span:nth-child(2) { animation-delay: 0.2s; }
+.copilot-typing span:nth-child(3) { animation-delay: 0.4s; }
+.copilot-input-area { padding: 12px; border-top: 1px solid var(--border); background: var(--bg); }
+.copilot-input-wrap { display: flex; gap: 8px; align-items: flex-end; }
+.copilot-input { flex: 1; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--text); resize: none; min-height: 40px; max-height: 120px; }
+.copilot-input:focus { outline: none; border-color: var(--ai); box-shadow: 0 0 0 3px rgba(168,85,247,0.15); }
+.copilot-send { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, var(--ai), var(--ai-2)); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; flex-shrink: 0; transition: all 0.18s; }
+.copilot-send:hover:not(:disabled) { transform: scale(1.05); }
+.copilot-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ai-insight-card { background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(236,72,153,0.06)); border: 1px solid rgba(168,85,247,0.2); border-radius: 12px; padding: 14px; position: relative; overflow: hidden; transition: all 0.25s; cursor: pointer; }
+.ai-insight-card:hover { border-color: rgba(168,85,247,0.4); transform: translateY(-1px); }
+.ai-insight-card::before { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(168,85,247,0.08), transparent 50%); pointer-events: none; }
+
+.risk-meter { display: flex; gap: 2px; margin-top: 8px; }
+.risk-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--bg-hover); transition: all 0.3s; }
+.risk-bar.filled { background: var(--success); }
+.risk-bar.medium { background: var(--warning); }
+.risk-bar.high { background: var(--danger); }
+
+.login-feature { display: flex; align-items: flex-start; gap: 14px; padding: 14px; border-radius: 10px; transition: all 0.25s; cursor: default; border: 1px solid transparent; }
+.login-feature:hover { background: rgba(99,102,241,0.05); border-color: rgba(99,102,241,0.1); transform: translateX(4px); }
+.login-feature-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+
+.tab-btn { position: relative; padding: 0.625rem 1rem; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; display: inline-flex; align-items: center; gap: 0.375rem; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: var(--accent); border-radius: 50%; animation: scaleInBounce 0.3s ease; }
+
+.kpi-value { animation: countUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
+
+.success-check { display: inline-block; }
+.success-check svg { stroke-dasharray: 50; stroke-dashoffset: 50; animation: checkmark 0.6s ease-out forwards; }
+
+button:focus-visible, .nav-item:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.stat-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; background: var(--bg-hover); border-radius: 999px; font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--text-muted); }
+
+.divider { height: 1px; background: var(--border); margin: 1rem 0; }
+
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.section-title { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.015em; }
+.section-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 0.25rem; }
+
+.metric-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+.gradient-border { position: relative; background: var(--bg-elevated); border-radius: 12px; }
+.gradient-border::before { content: ''; position: absolute; inset: 0; border-radius: 12px; padding: 1px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+
+.status-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+.status-dot-success { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-dot-danger { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.status-dot-warning { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+.status-dot-info { background: var(--info); box-shadow: 0 0 6px var(--info); }
+</style>
+</head>
+<body class="h-screen overflow-hidden" data-theme="dark">
+<div id="app" class="h-full"></div>
+<div id="toast-container"></div>
+<div id="modal-root"></div>
+<div id="copilot-root"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ICON SYSTEM - Lucide-style SVG icons
+// ═══════════════════════════════════════════════════════════════
+const ICONS = {
+  // Navigation & General
+  dashboard: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+  zap: '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  folder: '<svg viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+  flask: '<svg viewBox="0 0 24 24"><path d="M9 2h6M10 2v6.5a2 2 0 0 1-.2.9L5.3 18a2 2 0 0 0 1.8 3h10.8a2 2 0 0 0 1.8-3L13.2 9.4a2 2 0 0 1-.2-.9V2"/><path d="M8 14h8"/></svg>',
+  rocket: '<svg viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
+  fileText: '<svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',
+  lightbulb: '<svg viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  shieldCheck: '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
+  trending: '<svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  barChart: '<svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+  settings: '<svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
+  // Actions
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+  bell: '<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>',
+  x: '<svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+  checkCircle: '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  xCircle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
+  logOut: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><polyline points="21 12 9 12"/></svg>',
+  sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
+  download: '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  filter: '<svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>',
+  chevDown: '<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+  chevRight: '<svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>',
+  chevLeft: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+  chevUp: '<svg viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>',
+  send: '<svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+  // Auth
+  lock: '<svg viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  unlock: '<svg viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',
+  user: '<svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  users: '<svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  mail: '<svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>',
+  eye: '<svg viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>',
+  // Feedback
+  alertTriangle: '<svg viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>',
+  alertCircle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>',
+  info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+  helpCircle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>',
+  // Misc
+  activity: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  target: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  flame: '<svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+  clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+  pause: '<svg viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>',
+  rotateCcw: '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+  ban: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>',
+  sparkles: '<svg viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>',
+  bot: '<svg viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>',
+  moreHorizontal: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+  arrowRight: '<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  arrowLeft: '<svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+  arrowUpRight: '<svg viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+  paperclip: '<svg viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>',
+  messageSquare: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  gitBranch: '<svg viewBox="0 0 24 24"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+  code: '<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+  terminal: '<svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>',
+  database: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>',
+  server: '<svg viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>',
+  globe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  cpu: '<svg viewBox="0 0 24 24"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>',
+  hash: '<svg viewBox="0 0 24 24"><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></svg>',
+  tag: '<svg viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>',
+  list: '<svg viewBox="0 0 24 24"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>',
+  clipboard: '<svg viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
+  layers: '<svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  pieChart: '<svg viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
+  link: '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  externalLink: '<svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>',
+  fileCode: '<svg viewBox="0 0 24 24"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m9 18 3-3-3-3"/><path d="m5 12-3 3 3 3"/></svg>',
+  workflow: '<svg viewBox="0 0 24 24"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>',
+  key: '<svg viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 4 18h3v2h2v-2h1v-2H4.414a1 1 0 0 1-.707-.293l-1.414-1.414a1 1 0 0 1 0-1.414L14.586 4.586a2 2 0 0 1 2.828 0l2 2a2 2 0 0 1 0 2.828l-12 12z"/><circle cx="17" cy="7" r="1"/></svg>',
+  trendingUp: '<svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  trendingDown: '<svg viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>',
+  award: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>',
+  gauge: '<svg viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>',
+  box: '<svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  puzzle: '<svg viewBox="0 0 24 24"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.313 8.685a.98.98 0 0 1 .837-.276c.47.07.802.48.968.925a2.501 2.501 0 1 0 3.214-3.214c-.446-.166-.855-.497-.925-.968a.979.979 0 0 1 .276-.837l1.61-1.61a2.404 2.404 0 0 1 1.705-.707c.618 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg>',
+  cube: '<svg viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  vial: '<svg viewBox="0 0 24 24"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>',
+  testTube: '<svg viewBox="0 0 24 24"><path d="M9 2h6M10 2v6.2a4 4 0 0 1-.4 1.75L5.3 15.8a2 2 0 0 0 .2 2.1l1.5 2a2 2 0 0 0 1.6.8h6.8a2 2 0 0 0 1.6-.8l1.5-2a2 2 0 0 0 .2-2.1L15.4 9.95a4 4 0 0 1-.4-1.75V2"/></svg>',
+  beaker: '<svg viewBox="0 0 24 24"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>',
+};
+
+// Icon helper function
+function icon(name, size = 16) {
+  const svg = ICONS[name] || '';
+  return `<span class="icon-wrap" style="width: <LaTex>id_161</LaTex>{size}px; font-size: <LaTex>id_160</LaTex>{svg}</span>`;
+}
+
+function iconContainer(name, size = 'md', colorVar = 'accent') {
+  const sizeMap = { xs: 20, sm: 24, md: 32, lg: 40, xl: 48 };
+  const iconSize = sizeMap[size] * 0.5;
+  return `<div class="icon-container icon-container-<LaTex>id_159</LaTex>{colorVar}-rgb, 99,102,241), 0.1); color: var(--<LaTex>id_158</LaTex>{icon(name, iconSize)}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const state = {
+  view: 'login', user: null,
+  theme: localStorage.getItem('sentra-theme') || 'dark',
+  dashboardTab: 'deployments',
+  dateRange: '30d',
+  selectedTemplate: null,
+  focusMode: null, cmdPaletteOpen: false,
+  activityFeed: [], activityInterval: null,
+  selectedTests: new Set(),
+  expandedTest: null,
+  editingTestCase: null,
+  hierarchy: null,
+  selectedHierarchyNode: 'h3',
+  testCases: [],
+  evidencePerTest: {},
+  commentsPerTest: {},
+  deployExecution: null,
+  approvalModal: null,
+  rollbackModal: null,
+  diffViewer: null,
+  suggestionSubmission: null,
+  suggestionDetail: null,
+  activeTimers: {},
+  notifications: [],
+  notifDropdownOpen: false,
+  filtersOpen: false,
+  activeFilters: {},
+  savedPresets: [
+    { id: 'p1', name: 'Failed tests this week', filters: { status: ['failed'] } },
+    { id: 'p2', name: 'My high-priority items', filters: { priority: ['high'] } }
+  ],
+  fabOpen: false,
+  copilotOpen: false,
+  copilotMessages: [],
+  copilotTyping: false,
+  forgotPasswordOpen: false,
+  forgotPasswordStep: 'email',
+  projects: [
+    { id: 'p1', name: 'E-Commerce Platform', categories: [
+      { id: 'c1', name: 'Authentication', modules: [
+        { id: 'm1', name: 'Login & SSO', suites: [
+          { id: 's1', name: 'Login Flow Suite' },
+          { id: 's2', name: 'SSO Integration' }
+        ]},
+        { id: 'm2', name: 'Registration', suites: [
+          { id: 's3', name: 'Signup Suite' }
+        ]}
+      ]},
+      { id: 'c2', name: 'Shopping Cart', modules: [
+        { id: 'm3', name: 'Cart Operations', suites: [
+          { id: 's4', name: 'Add/Remove Items' }
+        ]}
+      ]},
+      { id: 'c3', name: 'Payments', modules: [
+        { id: 'm4', name: 'Checkout', suites: [
+          { id: 's5', name: 'Payment Flow' }
+        ]}
+      ]}
+    ]},
+    { id: 'p2', name: 'Payment Gateway', categories: [
+      { id: 'c4', name: 'Transactions', modules: [
+        { id: 'm5', name: 'Payment Processing', suites: [
+          { id: 's6', name: 'Stripe Integration' },
+          { id: 's7', name: 'PayPal Integration' }
+        ]}
+      ]}
+    ]},
+    { id: 'p3', name: 'User Management', categories: [
+      { id: 'c5', name: 'User Profiles', modules: [
+        { id: 'm6', name: 'Profile Management', suites: [
+          { id: 's8', name: 'Profile Suite' }
+        ]}
+      ]}
+    ]}
+  ]
+};
+
+const ROLE_PERMISSIONS = {
+  manager: {
+    nav: ['dashboard', 'mywork', 'projects', 'testing', 'deployments', 'templates', 'suggestions', 'audit', 'reports', 'settings'],
+    canEdit: true, canApprove: true, canDelete: true
+  },
+  tester: {
+    nav: ['dashboard', 'mywork', 'testing', 'suggestions', 'settings'],
+    canEdit: true, canApprove: false, canDelete: false
+  },
+  engineer: {
+    nav: ['dashboard', 'mywork', 'deployments', 'templates', 'suggestions', 'settings'],
+    canEdit: true, canApprove: false, canDelete: false
+  },
+  auditor: {
+    nav: ['dashboard', 'audit', 'reports', 'settings'],
+    canEdit: false, canApprove: false, canDelete: false, readOnly: true
+  }
+};
+
+document.body.setAttribute('data-theme', state.theme);
+
+const USERS = {
+  manager:  { name: 'Jordan Diaz', email: 'jordan@sentra.io', role: 'manager',  initials: 'JD', color: 'bg-indigo-600', title: 'Release Manager' },
+  tester:   { name: 'Sarah Chen',  email: 'sarah@sentra.io',  role: 'tester',   initials: 'SC', color: 'bg-emerald-600', title: 'QA Engineer' },
+  engineer: { name: 'David Park',  email: 'david@sentra.io',  role: 'engineer', initials: 'DP', color: 'bg-violet-600', title: 'DevOps Engineer' },
+  auditor:  { name: 'Alex Kumar',  email: 'alex@sentra.io',   role: 'auditor',  initials: 'AK', color: 'bg-cyan-600', title: 'Compliance Auditor' }
+};
+
+const PROJECTS = [
+  { id: 'p1', name: 'E-Commerce Platform', status: 'active', tests: 2847, deploys: 12, members: 14, color: '#6366f1' },
+  { id: 'p2', name: 'Payment Gateway', status: 'active', tests: 1523, deploys: 8, members: 9, color: '#8b5cf6' },
+  { id: 'p3', name: 'User Management', status: 'active', tests: 982, deploys: 5, members: 6, color: '#22d3ee' },
+  { id: 'p4', name: 'Analytics Dashboard', status: 'paused', tests: 634, deploys: 3, members: 5, color: '#f59e0b' }
+];
+
+const DEPLOYS = [
+  { id: 'd1', name: 'Release 2.4.1 — Prod', project: 'E-Commerce', steps: 24, done: 18, status: 'running', engineer: 'David Park', eta: '45m' },
+  { id: 'd2', name: 'Hotfix — Payment GW', project: 'Payment GW', steps: 12, done: 12, status: 'completed', engineer: 'Lisa Wang', duration: '32m' }
+];
+
+const TEMPLATES = [
+  { id: 't1', name: 'Prod Deployment — Standard', type: 'deploy', ver: 'v3.2', updated: 'Jun 5', author: 'Jordan Diaz', status: 'published', uses: 47 },
+  { id: 't2', name: 'Regression Suite — Ecom', type: 'test', ver: 'v5.0', updated: 'Jun 6', author: 'Sarah Chen', status: 'published', uses: 89 }
+];
+
+const SUGGESTIONS = [
+  { id: 's1', title: 'Add DB backup verification step', type: 'deployment', priority: 'high', status: 'submitted', submitter: 'David Park', time: '2h ago', context: 'Release 2.4.1', reason: 'Last month a corrupt backup caused a 45-min rollback delay.', attachments: 1, comments: 3 },
+  { id: 's2', title: 'Test: empty cart checkout attempt', type: 'test', priority: 'medium', status: 'submitted', submitter: 'Sarah Chen', time: '4h ago', context: 'Sprint 24', reason: 'Edge case not covered in current suite.', attachments: 0, comments: 1 },
+  { id: 's3', title: 'Cache clearing in deploy checklist', type: 'deployment', priority: 'high', status: 'approved', submitter: 'Lisa Wang', time: '1d ago', context: 'Hotfix', reason: 'Stale cache caused errors.', approvedBy: 'Jordan Diaz', appliedTo: 'v3.3' }
+];
+
+const AUDIT = [
+  { id: '#12847', actor: 'David Park', action: 'step.completed', entity: 'Release 2.4.1', time: '09:47', result: 'Step 17' },
+  { id: '#12846', actor: 'Sarah Chen', action: 'test.failed', entity: 'Sprint 24', time: '09:41', result: 'TC-2805' },
+  { id: '#12844', actor: 'Jordan Diaz', action: 'suggestion.approved', entity: '#42', time: '09:32', result: 'Merge to master' }
+];
+
+const INITIAL_TEST_CASES = [
+  { id: 'TC-2801', name: 'Login with valid creds', status: 'passed', dur: '2.3s', desc: 'Verify user can login', assignee: 'Sarah Chen', module: 'Auth', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's1', priority: 'high', type: 'functional' },
+  { id: 'TC-2802', name: 'Login with wrong pwd', status: 'passed', dur: '1.8s', desc: 'Verify error message', assignee: 'Sarah Chen', module: 'Auth', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's1', priority: 'high', type: 'functional' },
+  { id: 'TC-2803', name: 'Rate limit (5 attempts)', status: 'passed', dur: '4.1s', desc: 'Verify account locked', assignee: 'Mike Johnson', module: 'Auth', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's1', priority: 'medium', type: 'security' },
+  { id: 'TC-2804', name: 'Password reset email', status: 'failed', dur: '5.7s', note: 'Not received in 60s', desc: 'Verify reset email sent', assignee: 'Sarah Chen', module: 'Auth', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's1', priority: 'high', type: 'functional' },
+  { id: 'TC-2805', name: 'MFA on suspicious IP', status: 'blocked', dur: '—', note: 'MFA service degraded', desc: 'Verify MFA triggered', assignee: 'Alex Kumar', module: 'Security', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's1', priority: 'critical', type: 'security' },
+  { id: 'TC-2806', name: 'Cart persistence', status: 'not-run', dur: '—', desc: 'Verify cart persists', assignee: 'Mike Johnson', module: 'Cart', projectId: 'p1', categoryId: 'c2', moduleId: 'm3', suiteId: 's4', priority: 'medium', type: 'functional' },
+  { id: 'TC-2807', name: 'SSO redirect', status: 'not-run', dur: '—', desc: 'Verify SSO flow', assignee: 'Sarah Chen', module: 'Auth', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's2', priority: 'medium', type: 'integration' },
+  { id: 'TC-2808', name: 'Session invalidation', status: 'not-run', dur: '—', desc: 'Verify logout', assignee: 'Alex Kumar', module: 'Security', projectId: 'p1', categoryId: 'c1', moduleId: 'm1', suiteId: 's1', priority: 'high', type: 'security' }
+];
+
+const INITIAL_DEPLOY_STEPS = [
+  { id: 1, name: 'Pre-flight validation', status: 'completed', dur: '1m 12s', expectedDur: 72, desc: 'Verify services reachable', command: 'curl -sSf http://api/health' },
+  { id: 2, name: 'DB backup snapshot', status: 'completed', dur: '4m 31s', expectedDur: 271, crit: true, desc: 'Full DB backup', command: 'pg_dump --format=custom db > backup.dump' },
+  { id: 3, name: 'Deploy build v2.4.1', status: 'completed', dur: '6m 42s', expectedDur: 402, crit: true, desc: 'Roll out build', command: 'kubectl rollout deploy/app --image=v2.4.1' },
+  { id: 4, name: 'Run migrations', status: 'completed', dur: '3m 18s', expectedDur: 198, crit: true, desc: 'DB migrations', command: 'alembic upgrade head' },
+  { id: 5, name: 'Health checks', status: 'completed', dur: '0m 52s', expectedDur: 52, desc: 'Verify endpoints', command: 'curl api/health' },
+  { id: 6, name: 'Approval gate', status: 'running', dur: '—', expectedDur: null, crit: true, gate: true, desc: 'Manager approval required', approvers: ['Jordan Diaz', 'Lisa Wang'], approvalHistory: [] },
+  { id: 7, name: 'Switch DNS traffic', status: 'pending', dur: '—', expectedDur: 180, crit: true, desc: 'Update DNS', command: 'aws route53 change-resource-record-sets' },
+  { id: 8, name: 'Monitor error rate', status: 'pending', dur: '—', expectedDur: 900, crit: true, desc: 'Watch 15 min', command: 'watch metrics' }
+];
+
+const ROLLBACK_PLAN = [
+  { order: 1, action: 'Switch DNS back to previous version', duration: '3m', command: 'aws route53 rollback' },
+  { order: 2, action: 'Scale down new deployment pods', duration: '2m', command: 'kubectl scale --replicas=0' },
+  { order: 3, action: 'Restore database from backup', duration: '8m', command: 'pg_restore backup.dump', critical: true },
+  { order: 4, action: 'Roll back migrations', duration: '2m', command: 'alembic downgrade -1', critical: true },
+  { order: 5, action: 'Verify previous version healthy', duration: '2m', command: 'curl api-v2.4.0/health' }
+];
+
+const CHART_DATA = {
+  trend: {
+    '7d': [{day:'Mon',tests:45,deploys:2},{day:'Tue',tests:68,deploys:3},{day:'Wed',tests:92,deploys:4},{day:'Thu',tests:78,deploys:2},{day:'Fri',tests:112,deploys:5},{day:'Sat',tests:34,deploys:1},{day:'Sun',tests:21,deploys:0}],
+    '30d': [{day:'W1',tests:420,deploys:12},{day:'W2',tests:545,deploys:15},{day:'W3',tests:612,deploys:18},{day:'W4',tests:689,deploys:22}],
+    '90d': [{month:'Mar',tests:1200,deploys:38},{month:'Apr',tests:1545,deploys:47},{month:'May',tests:1890,deploys:58}],
+    '1y': [{q:'Q1',tests:3800,deploys:112},{q:'Q2',tests:4650,deploys:145},{q:'Q3',tests:5420,deploys:178},{q:'Q4',tests:6180,deploys:203}]
+  },
+  coverage: [
+    {module:'Auth',coverage:92},{module:'Cart',coverage:87},{module:'Payments',coverage:95},
+    {module:'Search',coverage:78},{module:'Profile',coverage:84},{module:'Orders',coverage:71}
+  ],
+  teamPerformance: [
+    {name:'Sarah Chen',tests:312,passRate:94,avatar:'SC'},
+    {name:'David Park',tests:287,passRate:98,avatar:'DP'},
+    {name:'Mike Johnson',tests:198,passRate:87,avatar:'MJ'},
+    {name:'Alex Kumar',tests:156,passRate:91,avatar:'AK'}
+  ],
+  heatmap: [
+    {name:'Login',coverage:95,tests:42},{name:'Signup',coverage:88,tests:31},{name:'SSO',coverage:72,tests:28},
+    {name:'MFA',coverage:65,tests:18},{name:'Password',coverage:91,tests:24},{name:'OAuth',coverage:82,tests:16},
+    {name:'Add Item',coverage:97,tests:54},{name:'Remove',coverage:95,tests:38},{name:'Update Qty',coverage:89,tests:22},
+    {name:'Apply Coupon',coverage:76,tests:19},{name:'Save Later',coverage:68,tests:12},{name:'Estimate Ship',coverage:54,tests:8},
+    {name:'Stripe',coverage:98,tests:68},{name:'PayPal',coverage:94,tests:45},{name:'Apple Pay',coverage:87,tests:32},
+    {name:'Google Pay',coverage:85,tests:28},{name:'Refund',coverage:79,tests:24},{name:'Invoice',coverage:71,tests:18}
+  ]
+};
+
+const INITIAL_NOTIFICATIONS = [
+  { id: 'n1', type: 'approval_needed', title: 'Approval needed: Release 2.4.1', desc: 'David Park requested approval for Step 6', time: '2m ago', iconName: 'shieldCheck', colorVar: 'warning', read: false, link: 'deployments' },
+  { id: 'n2', type: 'suggestion', title: 'New suggestion submitted', desc: 'David Park: Add DB backup verification', time: '2h ago', iconName: 'lightbulb', colorVar: 'info', read: false, link: 'suggestions' },
+  { id: 'n3', type: 'ai_insight', title: 'AI detected a pattern', desc: '3 failed tests share root cause: MFA service', time: '3h ago', iconName: 'sparkles', colorVar: 'ai', read: false, link: 'testing' },
+  { id: 'n4', type: 'test_failed', title: 'Critical test failed', desc: 'TC-2805 blocked by Sarah Chen', time: '3h ago', iconName: 'xCircle', colorVar: 'danger', read: true, link: 'testing' },
+  { id: 'n5', type: 'deploy_completed', title: 'Deployment completed', desc: 'Hotfix — Payment Gateway in 32m', time: '5h ago', iconName: 'checkCircle', colorVar: 'success', read: true, link: 'deployments' }
+];
+
+const COMMANDS = [
+  { id: 'dashboard', label: 'Go to Dashboard', iconName: 'dashboard', action: () => navigate('dashboard'), keywords: 'home' },
+  { id: 'mywork', label: 'Go to My Work', iconName: 'zap', action: () => navigate('mywork'), keywords: 'tasks' },
+  { id: 'testing', label: 'Go to Testing', iconName: 'flask', action: () => navigate('testing'), keywords: 'qa', roles: ['manager', 'tester'] },
+  { id: 'deployments', label: 'Go to Deployments', iconName: 'rocket', action: () => navigate('deployments'), keywords: 'release', roles: ['manager', 'engineer'] },
+  { id: 'templates', label: 'Go to Templates', iconName: 'fileText', action: () => navigate('templates'), keywords: '', roles: ['manager', 'engineer'] },
+  { id: 'suggestions', label: 'Go to Suggestions', iconName: 'lightbulb', action: () => navigate('suggestions'), keywords: 'ideas', roles: ['manager', 'tester', 'engineer'] },
+  { id: 'audit', label: 'Go to Audit Center', iconName: 'shieldCheck', action: () => navigate('audit'), keywords: 'logs', roles: ['manager', 'auditor'] },
+  { id: 'reports', label: 'Go to Reports', iconName: 'trending', action: () => navigate('reports'), keywords: 'analytics', roles: ['manager', 'auditor'] },
+  { id: 'projects', label: 'Go to Projects', iconName: 'folder', action: () => navigate('projects'), keywords: '', roles: ['manager'] },
+  { id: 'open-copilot', label: 'Open AI Copilot', iconName: 'sparkles', action: () => { if (!state.copilotOpen) toggleCopilot(); }, keywords: 'ai assistant help' },
+  { id: 'toggle-theme', label: 'Toggle Theme', iconName: 'sun', action: () => toggleTheme(), keywords: 'dark light' },
+  { id: 'logout', label: 'Sign Out', iconName: 'logOut', action: () => { state.user = null; navigate('login'); }, keywords: 'exit' }
+];
+
+// Navigation config with icons
+const NAV_CONFIG = [
+  { id: 'dashboard', label: 'Dashboard', iconName: 'dashboard' },
+  { id: 'mywork', label: 'My Work', iconName: 'zap', badge: 7 },
+  { id: 'projects', label: 'Projects', iconName: 'folder' },
+  { id: 'testing', label: 'Testing', iconName: 'flask' },
+  { id: 'deployments', label: 'Deployments', iconName: 'rocket' },
+  { id: 'templates', label: 'Templates', iconName: 'fileText' },
+  { id: 'suggestions', label: 'Suggestions', iconName: 'lightbulb', badgeFn: () => SUGGESTIONS.filter(s => !['approved','rejected'].includes(s.status)).length },
+  { id: 'audit', label: 'Audit Center', iconName: 'shieldCheck' },
+  { id: 'reports', label: 'Reports', iconName: 'trending' },
+  { id: 'settings', label: 'Settings', iconName: 'settings' }
+];
+
+// ═══════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════
+function toast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const iconMap = { success: 'checkCircle', error: 'xCircle', warning: 'alertTriangle', info: 'info', ai: 'sparkles' };
+  const colorMap = { success: 'var(--success)', error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--info)', ai: 'var(--ai)' };
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `
+    <div style="color: <LaTex>id_157</LaTex>{icon(iconMap[type], 16)}</div>
+    <span class="flex-1 text-sm"><LaTex>id_156</LaTex>{icon('x', 12)}</button>
+  `;
+  container.appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 200); }, duration);
+}
+
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  document.body.setAttribute('data-theme', state.theme);
+  localStorage.setItem('sentra-theme', state.theme);
+  toast(`Switched to <LaTex>id_155</LaTex>{diameter}px`;
+  circle.style.left = `<LaTex>id_154</LaTex>{e.clientY - rect.top - radius}px`;
+  circle.classList.add('ripple-effect');
+  const existing = btn.querySelector('.ripple-effect');
+  if (existing) existing.remove();
+  btn.appendChild(circle);
+}
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-ripple, .btn-primary, .btn-ai, .btn-danger, .btn-success');
+  if (btn) addRipple(e);
+});
+
+// Charts
+const activeCharts = {};
+function destroyChart(id) { if (activeCharts[id]) { activeCharts[id].destroy(); delete activeCharts[id]; } }
+function getChartColors() {
+  const isDark = state.theme === 'dark';
+  return { grid: isDark ? '#1e293b' : '#e2e8f0', text: isDark ? '#94a3b8' : '#475569', tooltipBg: isDark ? '#0f172a' : '#ffffff', tooltipText: isDark ? '#e2e8f0' : '#0f172a', tooltipBorder: isDark ? '#334155' : '#cbd5e1' };
+}
+function renderDonutChart(canvasId, data) {
+  const ctx = document.getElementById(canvasId); if (!ctx) return; destroyChart(canvasId);
+  const c = getChartColors();
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: data.map(d => d.color), borderWidth: 0, hoverOffset: 12 }] },
+    options: {
+      cutout: '65%', responsive: true, maintainAspectRatio: false,
+      animation: { animateRotate: true, animateScale: true, duration: 1000, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: c.text, padding: 12, font: { size: 11 } } },
+        tooltip: { backgroundColor: c.tooltipBg, titleColor: c.tooltipText, bodyColor: c.tooltipText, borderColor: c.tooltipBorder, borderWidth: 1, padding: 10, cornerRadius: 8 }
+      }
+    }
+  });
+}
+function renderBarChart(canvasId, data, opts = {}) {
+  const ctx = document.getElementById(canvasId); if (!ctx) return; destroyChart(canvasId);
+  const c = getChartColors();
+  const colors = ['#6366f1','#8b5cf6','#a855f7','#c084fc','#22d3ee','#3b82f6'];
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.label),
+      datasets: [{
+        label: opts.label || 'Value',
+        data: data.map(d => d.value),
+        backgroundColor: data.map((d, i) => d.color || colors[i % colors.length]),
+        borderRadius: 6,
+        barThickness: opts.horizontal ? 16 : 32
+      }]
+    },
+    options: {
+      indexAxis: opts.horizontal ? 'y' : 'x',
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 800, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: c.tooltipBg, titleColor: c.tooltipText, bodyColor: c.tooltipText, borderColor: c.tooltipBorder, borderWidth: 1 }
+      },
+      scales: {
+        x: { grid: opts.horizontal ? { display: false } : { color: c.grid, drawBorder: false }, ticks: { color: c.text, font: { size: 10 } }, ...(opts.horizontal ? { max: opts.max || 100, beginAtZero: true } : { beginAtZero: true }) },
+        y: { grid: opts.horizontal ? { display: false } : { color: c.grid, drawBorder: false }, ticks: { color: c.text, font: { size: 11 } } }
+      }
+    }
+  });
+}
+function renderLineChart(canvasId, data) {
+  const ctx = document.getElementById(canvasId); if (!ctx) return; destroyChart(canvasId);
+  const c = getChartColors();
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.day || d.month || d.q),
+      datasets: [
+        { label: 'Tests', data: data.map(d => d.tests), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 5, pointHoverRadius: 8, pointBackgroundColor: '#6366f1', pointBorderColor: '#fff', pointBorderWidth: 2 },
+        { label: 'Deploys', data: data.map(d => d.deploys), borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 5, pointHoverRadius: 8, pointBackgroundColor: '#8b5cf6', pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1200, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { color: c.text, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
+        tooltip: { backgroundColor: c.tooltipBg, titleColor: c.tooltipText, bodyColor: c.tooltipText, borderColor: c.tooltipBorder, borderWidth: 1, padding: 10, cornerRadius: 8 }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: c.text, font: { size: 10 } } },
+        y: { grid: { color: c.grid, drawBorder: false }, ticks: { color: c.text, font: { size: 10 } }, position: 'left', beginAtZero: true },
+        y1: { grid: { display: false }, ticks: { color: c.text, font: { size: 10 } }, position: 'right', beginAtZero: true }
+      }
+    }
+  });
+}
+
+function exportCSV() {
+  const headers = ['ID', 'Actor', 'Action', 'Entity', 'Time', 'Result'];
+  const rows = AUDIT.map(a => [a.id, a.actor, a.action, a.entity, a.time, a.result]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"<LaTex>id_153</LaTex>{new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('CSV downloaded', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN PAGE (Redesigned with icons)
+// ═══════════════════════════════════════════════════════════════
+function renderLogin() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="min-h-screen flex">
+      <!-- LEFT PANEL -->
+      <div class="hidden lg:flex w-1/2 p-12 xl:p-16 flex-col justify-between relative overflow-hidden slide-in-left" style="background: linear-gradient(160deg, #0f172a 0%, #020617 100%);">
+        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.3), transparent 50%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.2), transparent 50%);"></div>
+        
+        <div class="relative z-10 flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 8px 20px -4px rgba(99,102,241,0.5);">
+            <LaTex>id_152</LaTex>{icon('sparkles', 12)}</span>
+            Now with AI Copilot
+          </div>
+          <h1 class="text-display-xl mb-5" style="color: white;">
+            Execute with<br>
+            <span style="background: linear-gradient(135deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">clarity.</span>
+          </h1>
+          <p class="text-base mb-10" style="color: var(--text-muted); line-height: 1.7;">
+            The all-in-one platform for testing, deployments, and everything in between. Built for teams who ship with confidence.
+          </p>
+          
+          <div class="space-y-2">
+            <div class="login-feature">
+              <div class="login-feature-icon"><LaTex>id_151</LaTex>{icon('rocket', 20)}</div>
+              <div>
+                <div class="font-semibold text-sm" style="color: white;">Guided deployments</div>
+                <div class="text-xs" style="color: var(--text-muted);">Step-by-step execution with rollback protection</div>
+              </div>
+            </div>
+            <div class="login-feature">
+              <div class="login-feature-icon"><LaTex>id_150</LaTex>{icon('sparkles', 20)}</div>
+              <div>
+                <div class="font-semibold text-sm" style="color: white;">AI-powered insights</div>
+                <div class="text-xs" style="color: var(--text-muted);">Smart suggestions and risk scoring</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="relative z-10 card p-4 slide-in-right" style="max-width: 420px;">
+          <div class="flex items-start gap-3">
+            <div class="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">RK</div>
+            <div>
+              <div class="text-sm italic mb-1" style="color: var(--text);">"Reduced our deployment failures by 73% in the first quarter."</div>
+              <div class="text-xs" style="color: var(--text-muted);">Rachel Kim, VP Engineering @ TechCorp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- RIGHT PANEL -->
+      <div class="w-full lg:w-1/2 flex items-center justify-center p-6 slide-in-right">
+        <div class="w-full max-w-sm">
+          <div class="lg:hidden flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+              <LaTex>id_149</LaTex>{icon('mail', 12)}
+                <span>Work email</span>
+              </label>
+              <input type="email" value="jordan@sentra.io" required placeholder="you@company.com">
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="form-label mb-0 flex items-center gap-1.5">
+                  <LaTex>id_148</LaTex>{icon('helpCircle', 12)}
+                  Forgot password?
+                </button>
+              </div>
+              <input type="password" value="demo123" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="btn btn-primary btn-ripple w-full py-2.5 font-semibold text-base">
+              Sign in
+              <LaTex>id_147</LaTex>{Object.entries(USERS).map(([k,u]) => `
+              <button onclick="handleLogin('${k}')" class="btn btn-subtle btn-ripple flex flex-col items-start gap-1 p-3 text-left">
+                <div class="flex items-center gap-2 w-full">
+                  <div class="w-8 h-8 rounded-full ${u.color} flex items-center justify-center text-[11px] font-bold text-white">${u.initials}</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs font-semibold truncate">${u.role.charAt(0).toUpperCase() + u.role.slice(1)}</div>
+                    <div class="text-[10px] truncate" style="color: var(--text-muted);">${u.name}</div>
+                  </div>
+                </div>
+                <div class="text-[9px] mono" style="color: var(--text-dim);">${u.title}</div>
+              </button>
+            `).join('')}
+          </div>
+          
+          <div class="mt-8 text-center text-[11px]" style="color: var(--text-dim);">
+            <div class="flex items-center justify-center gap-4 mb-2">
+              <span class="flex items-center gap-1.5"><LaTex>id_146</LaTex>{icon('key', 10)} <span>SSO Ready</span></span>
+              <span style="color: var(--border);">•</span>
+              <span class="flex items-center gap-1.5"><LaTex>id_145</LaTex>{icon('mail', 20)}
+              </div>
+              <div>
+                <h2 class="text-display-sm">Reset your password</h2>
+                <p class="text-xs" style="color: var(--text-muted);">We'll send you a reset link</p>
+              </div>
+            </div>
+            <button class="btn btn-ghost p-1" onclick="closeForgotPassword()"><LaTex>id_144</LaTex>{icon('info', 14)}</span>
+              <div class="text-xs" style="color: var(--text-muted);">
+                For SSO users, contact your IT administrator to reset your password through your organization's identity provider.
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-ghost flex-1" onclick="closeForgotPassword()">Cancel</button>
+            <button class="btn btn-primary flex-1 btn-ripple" onclick="sendResetEmail()">Send reset link</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (state.forgotPasswordStep === 'sent') {
+    const email = document.getElementById('forgot-email')?.value || 'jordan@sentra.io';
+    root.innerHTML = `
+      <div class="modal-overlay" onclick="closeForgotPassword()">
+        <div class="modal-content modal-small p-6 scale-in" onclick="event.stopPropagation()">
+          <div class="text-center py-4">
+            <div class="success-check mb-4 inline-block">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style="background: rgba(16,185,129,0.15); color: var(--success);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12" style="stroke-dasharray: 50; stroke-dashoffset: 50; animation: checkmark 0.8s ease-out forwards; animation-delay: 0.2s;"></polyline>
+                </svg>
+              </div>
+            </div>
+            <h2 class="text-display-sm mb-2">Check your email</h2>
+            <p class="text-sm mb-5" style="color: var(--text-muted);">
+              We've sent a password reset link to<br>
+              <span class="font-semibold" style="color: var(--text);"><LaTex>id_143</LaTex>{icon('clock', 10)} Link expires in 1 hour for security
+            </div>
+            <div class="flex flex-col gap-2">
+              <button class="btn btn-subtle w-full" onclick="state.forgotPasswordStep = 'email'; renderForgotPasswordModal();">Try different email</button>
+              <button class="btn btn-primary btn-ripple w-full" onclick="closeForgotPassword(); toast('You can now sign in with your new password', 'success');">Back to sign in</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+function sendResetEmail() {
+  const email = document.getElementById('forgot-email')?.value;
+  if (!email) { toast('Please enter your email', 'error'); return; }
+  toast('Sending reset link...', 'info', 1500);
+  setTimeout(() => {
+    state.forgotPasswordStep = 'sent';
+    renderForgotPasswordModal();
+  }, 800);
+}
+
+// TEST CASE EDITOR
+function openTestCaseEditor(testCase = null) {
+  if (!['manager', 'tester'].includes(state.user.role)) {
+    toast('You do not have permission to edit test cases', 'error');
+    return;
+  }
+  state.editingTestCase = testCase ? {
+    ...testCase,
+    steps: testCase.steps || [{action: '', expected: ''}],
+    preconditions: testCase.preconditions || '',
+    tags: testCase.tags || []
+  } : {
+    id: '', name: '', desc: '', status: 'not-run', dur: '—',
+    projectId: '', categoryId: '', moduleId: '', suiteId: '',
+    priority: 'medium', type: 'functional', assignee: state.user.name,
+    preconditions: '', steps: [{action: '', expected: ''}], tags: [],
+    automationStatus: 'manual', estimatedDuration: ''
+  };
+  renderTestCaseEditor();
+}
+function closeTestCaseEditor() {
+  state.editingTestCase = null;
+  document.getElementById('modal-root').innerHTML = '';
+}
+function addTestStep() {
+  state.editingTestCase.steps.push({ action: '', expected: '' });
+  renderTestCaseEditor();
+  setTimeout(() => {
+    const steps = document.querySelectorAll('.step-row');
+    if (steps.length) steps[steps.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+function removeTestStep(idx) {
+  if (state.editingTestCase.steps.length <= 1) {
+    toast('At least one step is required', 'warning');
+    return;
+  }
+  state.editingTestCase.steps.splice(idx, 1);
+  renderTestCaseEditor();
+}
+function updateTestStep(idx, field, value) {
+  state.editingTestCase.steps[idx][field] = value;
+}
+function addTag(tag) {
+  if (!tag.trim()) return;
+  if (state.editingTestCase.tags.includes(tag.trim())) return;
+  state.editingTestCase.tags.push(tag.trim());
+  renderTestCaseEditor();
+  setTimeout(() => {
+    const input = document.getElementById('tags-input-field');
+    if (input) { input.value = ''; input.focus(); }
+  }, 50);
+}
+function removeTag(tag) {
+  state.editingTestCase.tags = state.editingTestCase.tags.filter(t => t !== tag);
+  renderTestCaseEditor();
+}
+function saveTestCase() {
+  const tc = state.editingTestCase;
+  if (!tc.name.trim()) { toast('Test name is required', 'error'); return; }
+  if (!tc.projectId) { toast('Please select a project', 'error'); return; }
+  if (!tc.suiteId) { toast('Please select a test suite', 'error'); return; }
+  if (tc.steps.some(s => !s.action.trim())) { toast('All steps need an action', 'error'); return; }
+  if (!tc.id.trim()) tc.id = 'TC-' + (2800 + state.testCases.length + 1);
+  const project = state.projects.find(p => p.id === tc.projectId);
+  const category = project?.categories.find(c => c.id === tc.categoryId);
+  const module = category?.modules.find(m => m.id === tc.moduleId);
+  const suite = module?.suites.find(s => s.id === tc.suiteId);
+  const fullTc = {
+    ...tc,
+    projectName: project?.name,
+    categoryName: category?.name,
+    moduleName: module?.name,
+    suiteName: suite?.name,
+    module: category?.name || module?.name
+  };
+  const existing = state.testCases.findIndex(t => t.id === tc.id);
+  if (existing >= 0) {
+    state.testCases[existing] = fullTc;
+    toast('Test case updated successfully', 'success');
+  } else {
+    state.testCases.push(fullTc);
+    toast('Test case created successfully', 'success');
+  }
+  closeTestCaseEditor();
+  if (state.view === 'testing') renderTesting();
+}
+function renderTestCaseEditor() {
+  const tc = state.editingTestCase;
+  const isEdit = state.testCases.some(t => t.id === tc.id);
+  const selectedProject = state.projects.find(p => p.id === tc.projectId);
+  const selectedCategory = selectedProject?.categories.find(c => c.id === tc.categoryId);
+  const selectedModule = selectedCategory?.modules.find(m => m.id === tc.moduleId);
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="closeTestCaseEditor()">
+      <div class="modal-content p-6" onclick="event.stopPropagation()" style="max-width: 780px;">
+        <div class="flex items-start justify-between mb-6">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <h2 class="text-display-sm"><LaTex>id_142</LaTex>{isEdit ? `<span class="pill pill-info mono">${tc.id}</span>` : ''}
+            </div>
+            <p class="text-xs" style="color: var(--text-muted);">Fill in all details to create a comprehensive test case</p>
+          </div>
+          <button class="btn btn-ghost p-1" onclick="closeTestCaseEditor()">${icon('x', 16)}</button>
+        </div>
+        
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background: var(--accent); color: white;">1</div>
+            <h3 class="text-sm font-semibold display-font">Project & Location</h3>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Project <span class="form-required">*</span></label>
+              <select onchange="updateTestHierarchy('projectId', this.value)">
+                <option value="">Select project...</option>
+                <LaTex>id_141</LaTex>{p.id}" ${tc.projectId === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Category <LaTex>id_140</LaTex>{!selectedProject ? 'disabled' : ''}>
+                <option value=""><LaTex>id_139</LaTex>{selectedProject?.categories.map(c => `<option value="${c.id}" ${tc.categoryId === c.id ? 'selected' : ''}>${c.name}</option>`).join('') || ''}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Module ${selectedCategory ? '<span class="form-required">*</span>' : ''}</label>
+              <select onchange="updateTestHierarchy('moduleId', this.value)" <LaTex>id_138</LaTex>{selectedCategory ? 'Select module...' : 'Select category first'}</option>
+                <LaTex>id_137</LaTex>{m.id}" ${tc.moduleId === m.id ? 'selected' : ''}>${m.name}</option>`).join('') || ''}
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Test Suite <span class="form-required">*</span></label>
+              <select onchange="updateTestHierarchy('suiteId', this.value)" <LaTex>id_136</LaTex>{selectedModule ? 'Select suite...' : 'Select module first'}</option>
+                <LaTex>id_135</LaTex>{s.id}" ${tc.suiteId === s.id ? 'selected' : ''}>${s.name}</option>`).join('') || ''}
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background: var(--accent); color: white;">2</div>
+            <h3 class="text-sm font-semibold display-font">Test Details</h3>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="form-label">Test Name <span class="form-required">*</span></label>
+              <input value="<LaTex>id_134</LaTex>{tc.desc || ''}</textarea>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="form-label">Priority</label>
+                <select onchange="state.editingTestCase.priority = this.value">
+                  <LaTex>id_133</LaTex>{p}" ${tc.priority === p ? 'selected' : ''}>${p.charAt(0).toUpperCase() + p.slice(1)}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Type</label>
+                <select onchange="state.editingTestCase.type = this.value">
+                  <LaTex>id_132</LaTex>{t}" ${tc.type === t ? 'selected' : ''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Automation</label>
+                <select onchange="state.editingTestCase.automationStatus = this.value">
+                  <LaTex>id_131</LaTex>{a}" ${tc.automationStatus === a ? 'selected' : ''}>${a.charAt(0).toUpperCase() + a.slice(1)}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="form-label">Assignee</label>
+                <select onchange="state.editingTestCase.assignee = this.value">
+                  <LaTex>id_130</LaTex>{a}" ${tc.assignee === a ? 'selected' : ''}>${a}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Estimated Duration</label>
+                <input value="<LaTex>id_129</LaTex>{tc.preconditions || ''}</textarea>
+          <div class="form-hint">List any setup requirements or assumptions</div>
+        </div>
+        
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background: var(--accent); color: white;">4</div>
+              <h3 class="text-sm font-semibold display-font">Test Steps</h3>
+              <span class="pill pill-info"><LaTex>id_128</LaTex>{icon('plus', 12)} Add Step
+            </button>
+          </div>
+          <div id="steps-container">
+            <LaTex>id_127</LaTex>{idx + 1}</div>
+                <div class="step-content">
+                  <div>
+                    <label class="form-label text-[11px]">Action <span class="form-required">*</span></label>
+                    <input value="${step.action}" oninput="updateTestStep(${idx}, 'action', this.value)" placeholder="What the tester does">
+                  </div>
+                  <div>
+                    <label class="form-label text-[11px]">Expected Result</label>
+                    <input value="${step.expected}" oninput="updateTestStep(${idx}, 'expected', this.value)" placeholder="What should happen">
+                  </div>
+                </div>
+                <button class="step-remove" onclick="removeTestStep(${idx})" title="Remove step">
+                  ${icon('trash', 14)}
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background: var(--accent); color: white;">5</div>
+            <h3 class="text-sm font-semibold display-font">Tags</h3>
+            <span class="text-xs" style="color: var(--text-dim);">Optional</span>
+          </div>
+          <div class="tags-input" onclick="document.getElementById('tags-input-field').focus()">
+            <LaTex>id_126</LaTex>{tag}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${tag}')">${icon('x', 10)}</span></span>`).join('')}
+            <input
+              id="tags-input-field"
+              type="text"
+              placeholder="<LaTex>id_125</LaTex>{tc.name || 'this new test'}'), 300);">
+            <LaTex>id_124</LaTex>{isEdit ? 'Save Changes' : 'Create Test Case'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function updateTestHierarchy(field, value) {
+  state.editingTestCase[field] = value;
+  if (field === 'projectId') {
+    state.editingTestCase.categoryId = '';
+    state.editingTestCase.moduleId = '';
+    state.editingTestCase.suiteId = '';
+  } else if (field === 'categoryId') {
+    state.editingTestCase.moduleId = '';
+    state.editingTestCase.suiteId = '';
+  } else if (field === 'moduleId') {
+    state.editingTestCase.suiteId = '';
+  }
+  renderTestCaseEditor();
+}
+
+// RETAINED FUNCTIONS (condensed)
+function toggleTestSelection(testId, event) { if (event) event.stopPropagation(); if (state.selectedTests.has(testId)) state.selectedTests.delete(testId); else state.selectedTests.add(testId); renderTesting(); }
+function toggleSelectAll() { if (state.selectedTests.size === state.testCases.length) state.selectedTests.clear(); else state.testCases.forEach(tc => state.selectedTests.add(tc.id)); renderTesting(); }
+function bulkMarkStatus(status) {
+  state.testCases.forEach(tc => { if (state.selectedTests.has(tc.id)) tc.status = status; });
+  toast(`<LaTex>id_123</LaTex>{status}`, status === 'passed' ? 'success' : 'error');
+  state.selectedTests.clear(); renderTesting();
+}
+function addComment(testId) {
+  const input = document.getElementById(`comment-input-<LaTex>id_122</LaTex>{state.selectedHierarchyNode === node.id ? 'selected' : ''}" style="padding-left: <LaTex>id_121</LaTex>{node.id}'; renderTesting();"><LaTex>id_120</LaTex>{typeColors[node.type]};"><LaTex>id_119</LaTex>{node.name}</span><LaTex>id_118</LaTex>{node.count}</span>` : ''}</div><LaTex>id_117</LaTex>{modules.map(m => {
+        let c = '#dc2626';
+        if (m.coverage >= 50) c = '#ea580c';
+        if (m.coverage >= 70) c = '#f59e0b';
+        if (m.coverage >= 80) c = '#84cc16';
+        if (m.coverage >= 90) c = '#10b981';
+        return `<div class="heat-cell" style="background: ${c};">${m.coverage}<div class="tooltip"><strong>${m.name}</strong><br>${m.coverage}% · ${m.tests} tests</div></div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+function renderTimeline() {
+  const steps = [
+    { name: 'Pre-flight', start: 0, duration: 8, status: 'completed' },
+    { name: 'DB backup', start: 8, duration: 22, status: 'completed', crit: true },
+    { name: 'Deploy build', start: 30, duration: 32, status: 'completed', crit: true },
+    { name: 'Migrations', start: 62, duration: 18, status: 'completed', crit: true },
+    { name: 'Health checks', start: 80, duration: 5, status: 'completed' },
+    { name: 'Approval gate', start: 85, duration: 10, status: 'running', crit: true },
+    { name: 'DNS switch', start: 95, duration: 8, status: 'pending', crit: true },
+    { name: 'Monitor', start: 103, duration: 15, status: 'pending' }
+  ];
+  const colorMap = { completed: 'var(--success)', running: 'var(--accent)', pending: 'var(--border-hover)' };
+  return `<div class="card p-5 card-hover">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-semibold display-font">Execution Timeline — Release 2.4.1</h3>
+      <span class="stat-badge">${icon('clock', 10)} Total: 120 min</span>
+    </div>
+    <div class="timeline-axis"><span>0m</span><span>30m</span><span>60m</span><span>90m</span><span>120m</span></div>
+    <div class="space-y-1 stagger">
+      <LaTex>id_116</LaTex>{s.name}${s.crit ? `<span class="pill pill-critical text-[9px] ml-1">${icon('alertTriangle', 8)} Critical</span>` : ''}</div><div class="timeline-track"><div class="timeline-bar" style="left: ${(s.start/120)*100}%; width: ${(s.duration/120)*100}%; background: ${colorMap[s.status]};">${s.duration}m</div></div></div>`).join('')}
+    </div>
+  </div>`;
+}
+function startDeploymentExecution() {
+  if (!['manager', 'engineer'].includes(state.user.role)) {
+    toast('Only managers and engineers can start deployments', 'error');
+    return;
+  }
+  state.deployExecution = { id: 'd-new-' + Date.now(), name: 'Release 2.4.1 — Production', template: 'v3.2', startTime: Date.now(), paused: false, totalPausedTime: 0, steps: JSON.parse(JSON.stringify(INITIAL_DEPLOY_STEPS)), currentIdx: 5, elapsedPerStep: {}, completed: INITIAL_DEPLOY_STEPS.filter(s => s.status === 'completed').length };
+  state.focusMode = { type: 'deploy' };
+  renderFocusMode();
+  toast('Deployment started', 'info');
+}
+function stopAllTimers() { Object.values(state.activeTimers).forEach(t => clearInterval(t)); state.activeTimers = {}; }
+function formatElapsed(seconds) { const m = Math.floor(seconds / 60); const s = seconds % 60; return `<LaTex>id_115</LaTex>{s.toString().padStart(2, '0')}s`; }
+function openApprovalModal(stepIdx) {
+  if (!['manager'].includes(state.user.role)) {
+    toast('Only managers can approve', 'error');
+    return;
+  }
+  state.approvalModal = { stepIdx, step: state.deployExecution.steps[stepIdx] };
+  renderApprovalModal();
+}
+function closeApprovalModal() { state.approvalModal = null; document.getElementById('modal-root').innerHTML = ''; renderFocusMode(); }
+function approveStep() {
+  const { stepIdx, step } = state.approvalModal;
+  step.approvalHistory = step.approvalHistory || [];
+  step.approvalHistory.push({ decision: 'approved', approver: state.user.name, time: new Date().toLocaleTimeString() });
+  step.status = 'completed'; state.deployExecution.completed++; state.deployExecution.currentIdx = stepIdx + 1;
+  if (state.deployExecution.steps[stepIdx + 1]) state.deployExecution.steps[stepIdx + 1].status = 'running';
+  closeApprovalModal(); toast('Approved successfully', 'success'); renderFocusMode();
+}
+function rejectStep() {
+  const { step } = state.approvalModal;
+  step.approvalHistory = step.approvalHistory || [];
+  step.approvalHistory.push({ decision: 'rejected', approver: state.user.name });
+  closeApprovalModal(); toast('Approval rejected', 'error');
+  setTimeout(() => { if (confirm('Rollback?')) openRollbackModal(); }, 500);
+}
+function renderApprovalModal() {
+  const { step } = state.approvalModal;
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="closeApprovalModal()">
+      <div class="modal-content p-6 scale-in" onclick="event.stopPropagation()">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="pill pill-block"><LaTex>id_114</LaTex>{step.id}: <LaTex>id_113</LaTex>{icon('x', 16)}</button>
+        </div>
+        <div class="card p-4 mb-5" style="background: var(--bg);">
+          <h3 class="text-label mb-3" style="color: var(--text-muted);">Current Metrics</h3>
+          <div class="grid grid-cols-4 gap-3">
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">Error Rate</div>
+              <div class="text-lg font-bold" style="color: var(--success);">0.02%</div>
+            </div>
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">p95</div>
+              <div class="text-lg font-bold" style="color: var(--success);">142ms</div>
+            </div>
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">Smoke</div>
+              <div class="text-lg font-bold" style="color: var(--success);">23/23</div>
+            </div>
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">Uptime</div>
+              <div class="text-lg font-bold" style="color: var(--success);">100%</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 pt-4" style="border-top: 1px solid var(--border);">
+          <button class="btn btn-success flex-1 btn-ripple" onclick="approveStep()">
+            <LaTex>id_112</LaTex>{icon('x', 14)} Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function openRollbackModal() { state.rollbackModal = {}; renderRollbackModal(); }
+function closeRollbackModal() { state.rollbackModal = null; document.getElementById('modal-root').innerHTML = ''; }
+function confirmRollback() {
+  closeRollbackModal(); stopAllTimers(); toast('Rollback initiated', 'error');
+  state.focusMode = { type: 'rollback' }; renderRollbackExecution();
+}
+function renderRollbackModal() {
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="closeRollbackModal()">
+      <div class="modal-content p-6 scale-in" onclick="event.stopPropagation()" style="max-width: 600px;">
+        <div class="flex items-start gap-3 mb-5">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(239,68,68,0.15); color: var(--danger);">
+            <LaTex>id_111</LaTex>{icon('x', 16)}</button>
+        </div>
+        <div class="flex gap-2 pt-4" style="border-top: 1px solid var(--border);">
+          <button class="btn btn-ghost flex-1" onclick="closeRollbackModal()">Cancel</button>
+          <button class="btn btn-danger flex-1 btn-ripple" onclick="confirmRollback()">
+            <LaTex>id_110</LaTex>{icon('rotateCcw', 12)} Rollback</span>
+          <div class="flex-1"><div class="font-semibold text-sm display-font">Release 2.4.1 → v2.4.0</div></div>
+          <div class="text-right text-xs mono"><LaTex>id_109</LaTex>{ROLLBACK_PLAN.length}</div>
+        </div>
+        <div class="flex-1 overflow-y-auto scroll p-6">
+          <div class="max-w-3xl mx-auto space-y-3 stagger">
+            <LaTex>id_108</LaTex>{i < currentIdx ? 'deploy-step-card completed' : i === currentIdx ? 'deploy-step-card running' : 'deploy-step-card pending'}"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < currentIdx ? 'bg-emerald-500 text-white' : i === currentIdx ? 'bg-rose-500 text-white' : ''}" style="${i > currentIdx ? 'background: var(--border); color: var(--text-dim);' : ''}">${i < currentIdx ? icon('check', 12) : s.order}</div><div class="flex-1"><div class="font-medium text-sm">${s.action}</div></div></div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  render();
+  const interval = setInterval(() => {
+    currentIdx++;
+    if (currentIdx >= ROLLBACK_PLAN.length) { clearInterval(interval); setTimeout(() => { toast('Rollback complete', 'success'); state.focusMode = null; state.deployExecution = null; navigate('deployments'); }, 1500); return; }
+    render();
+  }, 2000);
+}
+function openSuggestionSubmission() {
+  if (state.user.role === 'auditor') {
+    toast('Auditors cannot submit suggestions', 'error');
+    return;
+  }
+  state.suggestionSubmission = { title: '', type: 'test', priority: 'medium', context: '', reason: '' };
+  renderSuggestionSubmission();
+}
+function closeSuggestionSubmission() { state.suggestionSubmission = null; document.getElementById('modal-root').innerHTML = ''; }
+function submitSuggestion() {
+  const s = state.suggestionSubmission;
+  if (!s.title.trim() || !s.reason.trim()) { toast('Title and reason required', 'error'); return; }
+  SUGGESTIONS.unshift({ id: 's' + (SUGGESTIONS.length + 1), ...s, status: 'submitted', submitter: state.user.name, time: 'just now', attachments: 0, comments: 0 });
+  closeSuggestionSubmission(); toast('Suggestion submitted', 'success');
+  if (state.view === 'suggestions') renderSuggestions();
+}
+function renderSuggestionSubmission() {
+  const s = state.suggestionSubmission;
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="closeSuggestionSubmission()">
+      <div class="modal-content p-6 scale-in" onclick="event.stopPropagation()">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <h2 class="text-display-sm">Submit Suggestion</h2>
+            <p class="text-xs" style="color: var(--text-muted);">Share an idea to improve our processes</p>
+          </div>
+          <button class="btn btn-ghost p-1" onclick="closeSuggestionSubmission()"><LaTex>id_107</LaTex>{s.title}" oninput="state.suggestionSubmission.title = this.value" placeholder="Brief, descriptive title">
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="form-label">Type</label>
+              <select onchange="state.suggestionSubmission.type = this.value">
+                <option value="test" <LaTex>id_106</LaTex>{s.type === 'deployment' ? 'selected' : ''}>Deploy</option>
+                <option value="process" <LaTex>id_105</LaTex>{s.priority === 'low' ? 'selected' : ''}>Low</option>
+                <option value="medium" <LaTex>id_104</LaTex>{s.priority === 'high' ? 'selected' : ''}>High</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Context</label>
+              <input value="<LaTex>id_103</LaTex>{s.reason}</textarea>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6 pt-4" style="border-top: 1px solid var(--border);">
+          <button class="btn btn-ghost flex-1" onclick="closeSuggestionSubmission()">Cancel</button>
+          <button class="btn btn-primary flex-1 btn-ripple" onclick="submitSuggestion()">
+            <LaTex>id_102</LaTex>{s.priority === 'high' ? 'pill-fail' : 'pill-block'}"><LaTex>id_101</LaTex>{s.priority}</span>
+              <span class="pill pill-info"><LaTex>id_100</LaTex>{s.status === 'approved' ? 'pill-pass' : 'pill-run'}"><LaTex>id_99</LaTex>{s.title}</h2>
+            <div class="text-xs mt-1" style="color: var(--text-muted);"><LaTex>id_98</LaTex>{s.time}</div>
+          </div>
+          <button class="btn btn-ghost p-1" onclick="closeSuggestionDetail()"><LaTex>id_97</LaTex>{s.reason}</p>
+        </div>
+        <LaTex>id_96</LaTex>{s.id}', 'master')">${icon('check', 14)} Approve</button><button class="btn btn-ghost" style="color: var(--danger);" onclick="rejectSuggestion('${s.id}')">${icon('x', 14)} Reject</button></div>` : ''}
+        ${!canApprove && s.status !== 'approved' ? `<div class="text-xs text-center py-3 pill pill-pend">${icon('lock', 10)} Only managers can approve suggestions</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+function openTestFocusMode(startIdx = 0) {
+  state.focusMode = { type: 'test', items: JSON.parse(JSON.stringify(state.testCases)), currentIdx: startIdx };
+  renderFocusMode();
+  toast('Focus Mode — P/F/B shortcuts', 'info');
+}
+function closeFocusMode() {
+  stopAllTimers();
+  if (state.focusMode?.type === 'test') {
+    state.focusMode.items.forEach(item => {
+      const o = state.testCases.find(t => t.id === item.id);
+      if (o) o.status = item.status;
+    });
+  }
+  state.focusMode = null; navigate(state.view);
+}
+function markCurrentTest(status) {
+  state.focusMode.items[state.focusMode.currentIdx].status = status;
+  toast(`Marked ${status}`, status === 'passed' ? 'success' : 'error');
+  renderFocusMode();
+  setTimeout(() => { if (state.focusMode.currentIdx < state.focusMode.items.length - 1) { state.focusMode.currentIdx++; renderFocusMode(); } }, 400);
+}
+function renderFocusMode() {
+  const fm = state.focusMode; if (!fm) return;
+  const app = document.getElementById('app');
+  if (fm.type === 'rollback') { renderRollbackExecution(); return; }
+  if (fm.type === 'deploy') {
+    const de = state.deployExecution;
+    app.innerHTML = `
+      <div class="focus-overlay">
+        <div class="h-14 flex items-center px-5 gap-4 flex-wrap" style="border-bottom: 1px solid var(--border);">
+          <button class="btn btn-ghost" onclick="closeFocusMode()"><LaTex>id_95</LaTex>{icon('play', 10)} Running</span><span class="font-semibold text-sm display-font"><LaTex>id_94</LaTex>{de.completed}/<LaTex>id_93</LaTex>{de.steps.map((s, i) => {
+              const isCurrent = i === de.currentIdx && s.status === 'running';
+              const isDone = s.status === 'completed';
+              return `<div class="deploy-step-card card p-4 ${isCurrent ? 'running' : isDone ? 'completed' : 'pending'}" ${isCurrent && s.gate ? 'onclick="openApprovalModal(' + i + ')" style="cursor:pointer;"' : ''}><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isDone ? 'bg-emerald-500 text-white' : isCurrent ? 'bg-indigo-500 text-white' : ''}" style="${!isDone && !isCurrent ? 'background: var(--border); color: var(--text-dim);' : ''}">${isDone ? icon('check', 12) : isCurrent && s.gate ? icon('shieldCheck', 12) : s.id}</div><div class="flex-1"><div class="font-semibold text-sm mb-1">Step ${s.id}: ${s.name}</div><div class="text-xs" style="color: var(--text-muted);">${s.desc}</div></div>${isCurrent && !s.gate ? `<div class="flex gap-1"><button class="btn btn-success text-xs btn-ripple" onclick="event.stopPropagation(); completeCurrentStep()">${icon('check', 12)}</button><button class="btn btn-danger text-xs btn-ripple" onclick="event.stopPropagation(); failCurrentStep()"><LaTex>id_92</LaTex>{icon('arrowLeft', 14)} Exit</button>
+        <div class="flex-1 flex items-center gap-2"><span class="pill pill-run"><LaTex>id_91</LaTex>{icon('check', 12)} <LaTex>id_90</LaTex>{icon('x', 12)} <LaTex>id_89</LaTex>{fm.currentIdx + 1}/<LaTex>id_88</LaTex>{fm.items.map((tc, i) => `<div class="px-3 py-2 cursor-pointer" style="border-bottom: 1px solid var(--border); ${i === fm.currentIdx ? 'background: var(--bg-hover); border-left: 3px solid var(--accent);' : ''}" onclick="state.focusMode.currentIdx = ${i}; renderFocusMode()"><div class="flex items-center gap-2 mb-0.5"><span style="color: ${tc.status === 'passed' ? 'var(--success)' : tc.status === 'failed' ? 'var(--danger)' : tc.status === 'blocked' ? 'var(--warning)' : 'var(--text-dim)'};">${icon(tc.status === 'passed' ? 'checkCircle' : tc.status === 'failed' ? 'xCircle' : tc.status === 'blocked' ? 'ban' : 'circle', 12)}</span><span class="mono text-xs" style="color: var(--text-dim);">${tc.id}</span></div><div class="text-sm">${tc.name}</div></div>`).join('')}
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto scroll p-6">
+          <div class="max-w-2xl mx-auto">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="mono text-xs" style="color: var(--text-dim);"><LaTex>id_87</LaTex>{c.status === 'passed' ? 'pill-pass' : c.status === 'failed' ? 'pill-fail' : c.status === 'blocked' ? 'pill-block' : 'pill-pend'}"><LaTex>id_86</LaTex>{c.name}</h1>
+            <p class="text-sm mb-6" style="color: var(--text-muted);"><LaTex>id_85</LaTex>{icon('check', 14)} Pass
+              </button>
+              <button class="btn py-3 text-white btn-ripple" style="background: var(--danger);" onclick="markCurrentTest('failed')">
+                <LaTex>id_84</LaTex>{icon('ban', 14)} Block
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function completeCurrentStep() {
+  if (!state.deployExecution) return;
+  const idx = state.deployExecution.currentIdx;
+  const step = state.deployExecution.steps[idx];
+  if (step.gate) { openApprovalModal(idx); return; }
+  step.status = 'completed'; state.deployExecution.completed++;
+  toast(`Step <LaTex>id_83</LaTex>{step.id} FAILED`, 'error');
+  if (step.crit) setTimeout(() => { if (confirm('Rollback?')) openRollbackModal(); }, 500);
+  renderFocusMode();
+}
+function toggleNotifications() { state.notifDropdownOpen = !state.notifDropdownOpen; renderHeader(); }
+function markNotificationRead(id) {
+  const n = state.notifications.find(x => x.id === id);
+  if (n) { n.read = true; if (n.link) { state.notifDropdownOpen = false; navigate(n.link); } }
+  renderHeader();
+}
+function markAllNotificationsRead() { state.notifications.forEach(n => n.read = true); toast('All marked read', 'success'); renderHeader(); }
+function renderNotificationsDropdown() {
+  if (!state.notifDropdownOpen) return '';
+  const unreadCount = state.notifications.filter(n => !n.read).length;
+  return `
+    <div class="notif-dropdown" onclick="event.stopPropagation()">
+      <div class="p-4 flex items-center justify-between" style="border-bottom: 1px solid var(--border);">
+        <div>
+          <h3 class="font-semibold text-sm display-font">Notifications</h3>
+          <p class="text-xs mt-0.5" style="color: var(--text-muted);"><LaTex>id_82</LaTex>{unreadCount > 0 ? `<button class="btn btn-ghost text-xs" onclick="markAllNotificationsRead()">Mark all read</button>` : ''}
+      </div>
+      <div class="max-h-[400px] overflow-y-auto scroll">
+        <LaTex>id_81</LaTex>{n.read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}')">
+            <div class="flex gap-3">
+              <div class="notif-icon" style="background: color-mix(in srgb, var(--${n.colorVar}) 15%, transparent); color: var(--${n.colorVar});">
+                ${icon(n.iconName, 16)}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium mb-0.5">${n.title}</div>
+                <div class="text-xs line-clamp-2" style="color: var(--text-muted);">${n.desc}</div>
+                <div class="text-[10px] mt-1 mono" style="color: var(--text-dim);">${n.time}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+function toggleFilters() { state.filtersOpen = !state.filtersOpen; if (state.view === 'testing') renderTesting(); else if (state.view === 'deployments') renderDeployments(); else if (state.view === 'suggestions') renderSuggestions(); }
+function setFilter(category, value) {
+  if (!state.activeFilters[category]) state.activeFilters[category] = [];
+  const idx = state.activeFilters[category].indexOf(value);
+  if (idx >= 0) state.activeFilters[category].splice(idx, 1); else state.activeFilters[category].push(value);
+  if (state.view === 'testing') renderTesting(); else if (state.view === 'deployments') renderDeployments(); else if (state.view === 'suggestions') renderSuggestions();
+}
+function clearFilters() { state.activeFilters = {}; if (state.view === 'testing') renderTesting(); else if (state.view === 'deployments') renderDeployments(); else if (state.view === 'suggestions') renderSuggestions(); }
+function getActiveFilterCount() { return Object.values(state.activeFilters).reduce((sum, arr) => sum + (arr?.length || 0), 0); }
+function renderFilterPanel(filterType) {
+  if (!state.filtersOpen) return '';
+  const filtersByType = {
+    testing: [{ category: 'status', label: 'Status', options: ['passed', 'failed', 'blocked', 'not-run'] }, { category: 'assignee', label: 'Assignee', options: ['Sarah Chen', 'Mike Johnson', 'Alex Kumar'] }, { category: 'module', label: 'Module', options: ['Auth', 'Cart', 'Security'] }, { category: 'priority', label: 'Priority', options: ['low', 'medium', 'high', 'critical'] }],
+    deployments: [{ category: 'status', label: 'Status', options: ['running', 'completed', 'pending'] }],
+    suggestions: [{ category: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved', 'rejected'] }, { category: 'priority', label: 'Priority', options: ['high', 'medium', 'low'] }]
+  };
+  const filters = filtersByType[filterType] || [];
+  return `
+    <div class="filter-panel">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span style="color: var(--accent);">${icon('filter', 14)}</span>
+          <h3 class="text-sm font-semibold display-font">Filters</h3>
+          <LaTex>id_80</LaTex>{getActiveFilterCount()} active</span>` : ''}
+        </div>
+        <div class="flex gap-2">
+          <LaTex>id_79</LaTex>{icon('x', 12)}</button>
+        </div>
+      </div>
+      <div class="space-y-4 stagger">
+        <LaTex>id_78</LaTex>{f.label}</div><div class="flex gap-2 flex-wrap">${f.options.map(opt => { const isActive = state.activeFilters[f.category]?.includes(opt); return `<button class="filter-chip ${isActive ? 'active' : ''}" onclick="setFilter('<LaTex>id_77</LaTex>{opt}')"><LaTex>id_76</LaTex>{state.fabOpen ? `<div class="fab-menu">${actions.map(a => `<div class="fab-item" onclick="${a.action}; toggleFab();"><span class="text-xs font-medium"><LaTex>id_75</LaTex>{icon(a.icon, 14)}</div></div>`).join('')}</div>` : ''}
+      <div class="fab-main <LaTex>id_74</LaTex>{state.fabOpen ? icon('x', 24) : icon('plus', 24)}
+      </div>
+    </div>
+  `;
+}
+function renderMobileBottomNav() {
+  if (!state.user || state.view === 'login') return '';
+  const role = state.user.role;
+  const allItems = [
+    { id: 'dashboard', icon: 'dashboard', label: 'Home' },
+    { id: 'testing', icon: 'flask', label: 'Tests', roles: ['manager', 'tester'] },
+    { id: 'deployments', icon: 'rocket', label: 'Deploy', roles: ['manager', 'engineer'] },
+    { id: 'suggestions', icon: 'lightbulb', label: 'Ideas', roles: ['manager', 'tester', 'engineer'] },
+    { id: 'audit', icon: 'shieldCheck', label: 'Audit', roles: ['manager', 'auditor'] },
+    { id: 'reports', icon: 'trending', label: 'Reports', roles: ['manager', 'auditor'] }
+  ];
+  const items = allItems.filter(i => !i.roles || i.roles.includes(role)).slice(0, 5);
+  return `<div class="mobile-bottom-nav"><LaTex>id_73</LaTex>{state.view === i.id ? 'active' : ''}" onclick="navigate('${i.id}')"><span style="color: ${state.view === i.id ? 'var(--accent)' : 'inherit'};">${icon(i.icon, 20)}</span><span>${i.label}</span></div>`).join('')}</div>`;
+}
+function renderEmptyState(type) {
+  const s = {
+    tests: { icon: 'flask', title: 'No tests yet', desc: 'Create your first test case', cta: 'Create', action: 'openTestCaseEditor()' },
+    filters: { icon: 'search', title: 'No matches', desc: 'Try different filters', cta: 'Clear', action: 'clearFilters()' },
+    access: { icon: 'lock', title: 'Access Restricted', desc: 'You don\'t have permission', cta: '', action: '' }
+  }[type] || { icon: 'box', title: 'Nothing here', desc: '', cta: '', action: '' };
+  return `<div class="empty-state"><div class="empty-illustration" style="color: var(--text-dim);"><LaTex>id_72</LaTex>{s.title}</h3><p class="text-sm mb-5" style="color: var(--text-muted);"><LaTex>id_71</LaTex>{s.cta ? `<button class="btn btn-primary btn-ripple" onclick="${s.action}">${icon('plus', 12)} ${s.cta}</button>` : ''}</div>`;
+}
+function toggleCopilot() {
+  state.copilotOpen = !state.copilotOpen;
+  if (state.copilotOpen && state.copilotMessages.length === 0) {
+    addCopilotMessage('ai', `Hi ${state.user?.name?.split(' ')[0]}! I'm your AI Copilot. Ask me anything about your work!`);
+  }
+  renderCopilot();
+}
+function addCopilotMessage(role, content) {
+  state.copilotMessages.push({ role, content, timestamp: Date.now() });
+}
+async function sendCopilotMessage(text) {
+  const input = document.getElementById('copilot-input');
+  const message = text || input?.value?.trim();
+  if (!message) return;
+  if (input) input.value = '';
+  addCopilotMessage('user', message);
+  state.copilotTyping = true;
+  renderCopilot();
+  await new Promise(r => setTimeout(r, 800));
+  state.copilotTyping = false;
+  addCopilotMessage('ai', `I understand you're asking about: "<LaTex>id_70</LaTex>{icon('sparkles', 16)}</span></div>
+        <div class="flex-1">
+          <div class="font-semibold text-sm display-font">AI Copilot</div>
+          <div class="text-[10px]" style="color: var(--text-muted);">SENTRA Intelligence</div>
+        </div>
+        <span class="pill pill-ai text-[10px]">Beta</span>
+        <button class="btn btn-ghost p-1" onclick="toggleCopilot()"><LaTex>id_69</LaTex>{state.copilotMessages.map(m => `<div class="copilot-msg ${m.role}">${m.content}</div>`).join('')}
+        <LaTex>id_68</LaTex>{icon('send', 16)}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ═══════════════════════════════════════════════════════════════
+const $ = s => document.querySelector(s);
+const render = html => {
+  if (state.focusMode) { renderFocusMode(); return; }
+  $('#app').innerHTML = html;
+  attachEvents();
+  renderFabContainer();
+  renderMobileBottomNavContainer();
+};
+function renderFabContainer() {
+  let c = document.getElementById('fab-container');
+  if (!c) { c = document.createElement('div'); c.id = 'fab-container'; document.body.appendChild(c); }
+  c.innerHTML = renderFab();
+}
+function renderMobileBottomNavContainer() {
+  let c = document.getElementById('mobile-nav-container');
+  if (!c) { c = document.createElement('div'); c.id = 'mobile-nav-container'; document.body.appendChild(c); }
+  c.innerHTML = renderMobileBottomNav();
+}
+function renderHeader() {
+  const h = document.getElementById('app-header');
+  if (h) h.outerHTML = renderHeaderHtml();
+}
+function renderHeaderHtml() {
+  const unread = state.notifications.filter(n => !n.read).length;
+  return `
+    <header id="app-header" class="h-14 flex items-center px-5 gap-4 relative" style="border-bottom: 1px solid var(--border);">
+      <div class="text-sm flex items-center gap-1">
+        <span style="color: var(--text-muted);">Workspace</span>
+        <span style="color: var(--border);">/</span>
+        <span class="font-medium capitalize display-font"><LaTex>id_67</LaTex>{icon('search', 12)}
+        <span class="hidden sm:inline">Search...</span>
+        <span class="kbd">⌘K</span>
+      </button>
+      <button class="btn btn-ghost p-2" onclick="toggleTheme()">
+        <LaTex>id_66</LaTex>{icon('bell', 16)}
+          <LaTex>id_65</LaTex>{unread}</span>` : ''}
+        </button>
+        <LaTex>id_64</LaTex>{icon('sparkles', 16)}
+      </button>
+    </header>
+  `;
+}
+function attachEvents() {
+  const app = $('#app');
+  app.onclick = e => {
+    const t = e.target.closest('[data-action]');
+    if (!t) return;
+    const action = t.dataset.action, val = t.dataset.value;
+    const actions = {
+      nav: () => navigate(val),
+      login: () => handleLogin(val),
+      logout: () => { state.user = null; navigate('login'); toast('Signed out', 'info'); },
+      tab: () => { state.dashboardTab = val; renderDashboard(); },
+      'theme-toggle': () => toggleTheme(),
+      'open-cmd': () => openCommandPalette(),
+      'open-test-focus': () => openTestFocusMode(),
+      'open-deploy-focus': () => startDeploymentExecution(),
+      'submit-suggestion': () => openSuggestionSubmission(),
+      'open-suggestion-detail': () => openSuggestionDetail(val),
+      'export-csv': () => exportCSV(),
+      'date-range': () => { state.dateRange = val; navigate(state.view); },
+      'toggle-select-all': () => toggleSelectAll(),
+      'toggle-test-select': () => toggleTestSelection(val, e),
+      'bulk-pass': () => bulkMarkStatus('passed'),
+      'bulk-fail': () => bulkMarkStatus('failed'),
+      'bulk-clear': () => { state.selectedTests.clear(); renderTesting(); },
+      'expand-test': () => { state.expandedTest = state.expandedTest === val ? null : val; renderTesting(); },
+      'new-test': () => openTestCaseEditor(),
+      'add-comment': () => addComment(val),
+      'toggle-filters': () => toggleFilters()
+    };
+    if (actions[action]) actions[action]();
+  };
+}
+function navigate(view) {
+  if (state.focusMode) closeFocusMode();
+  if (state.user) {
+    const perms = ROLE_PERMISSIONS[state.user.role];
+    if (!perms.nav.includes(view)) {
+      toast(`Access denied: ${state.user.role} cannot view <LaTex>id_63</LaTex>{state.user.name.split(' ')[0]}!`, 'success');
+  navigate(home);
+}
+document.addEventListener('click', (e) => {
+  if (state.notifDropdownOpen && !e.target.closest('.notif-dropdown') && !e.target.closest('[data-action]')) { state.notifDropdownOpen = false; renderHeader(); }
+  if (state.fabOpen && !e.target.closest('.fab-container')) { state.fabOpen = false; renderFabContainer(); }
+});
+function renderDatePicker() {
+  const ranges = [{id:'7d',label:'7d'},{id:'30d',label:'30d'},{id:'90d',label:'90d'},{id:'1y',label:'1y'}];
+  return `<div class="date-picker"><LaTex>id_62</LaTex>{r.id}" class="${state.dateRange === r.id ? 'active' : ''}">${r.label}</button>`).join('')}</div>`;
+}
+
+// COMMAND PALETTE
+function openCommandPalette() { state.cmdPaletteOpen = true; renderCommandPalette(); }
+function closeCommandPalette() { state.cmdPaletteOpen = false; document.getElementById('modal-root').innerHTML = ''; }
+function renderCommandPalette(query = '') {
+  const role = state.user?.role;
+  const filtered = COMMANDS.filter(c => {
+    if (c.roles && !c.roles.includes(role)) return false;
+    if (!query) return true;
+    return (c.label + ' ' + c.keywords).toLowerCase().split(' ').some(w => query.toLowerCase().includes(w));
+  });
+  document.getElementById('modal-root').innerHTML = `
+    <div class="modal-overlay" onclick="closeCommandPalette()">
+      <div class="modal-content scale-in" onclick="event.stopPropagation()" style="width: 650px;">
+        <div class="flex items-center gap-3 px-4 py-3" style="border-bottom: 1px solid var(--border);">
+          <span style="color: var(--text-dim);"><LaTex>id_61</LaTex>{query}" autocomplete="off" oninput="handleCmdInput(this.value)" onkeydown="handleCmdKeydown(event)" style="background: transparent; border: none; outline: none; padding: 0; flex: 1;">
+          <span class="kbd">ESC</span>
+        </div>
+        <div class="max-h-[400px] overflow-y-auto scroll p-2 stagger">
+          <LaTex>id_60</LaTex>{i === 0 ? 'selected' : ''}" onclick="executeCommand('${c.id}')"><span style="color: var(--accent);">${icon(c.iconName, 16)}</span><span class="flex-1 text-sm">${c.label}</span><span class="kbd">↵</span></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  setTimeout(() => { const i = document.getElementById('cmd-input'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 50);
+}
+let cmdSelectedIdx = 0;
+function handleCmdInput(v) { cmdSelectedIdx = 0; renderCommandPalette(v); }
+function handleCmdKeydown(e) {
+  const r = document.querySelectorAll('.cmd-result');
+  if (e.key === 'ArrowDown') { e.preventDefault(); cmdSelectedIdx = Math.min(cmdSelectedIdx + 1, r.length - 1); r.forEach((x, i) => x.classList.toggle('selected', i === cmdSelectedIdx)); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); cmdSelectedIdx = Math.max(cmdSelectedIdx - 1, 0); r.forEach((x, i) => x.classList.toggle('selected', i === cmdSelectedIdx)); }
+  else if (e.key === 'Enter') { e.preventDefault(); const s = r[cmdSelectedIdx]; if (s) s.click(); }
+}
+function executeCommand(id) { const c = COMMANDS.find(x => x.id === id); if (c) { closeCommandPalette(); c.action(); } }
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); if (state.cmdPaletteOpen) closeCommandPalette(); else if (state.user) openCommandPalette(); }
+  if (e.key === 'Escape') {
+    if (state.cmdPaletteOpen) closeCommandPalette();
+    else if (state.editingTestCase) closeTestCaseEditor();
+    else if (state.approvalModal) closeApprovalModal();
+    else if (state.rollbackModal) closeRollbackModal();
+    else if (state.suggestionSubmission) closeSuggestionSubmission();
+    else if (state.suggestionDetail) closeSuggestionDetail();
+    else if (state.forgotPasswordOpen) closeForgotPassword();
+    else if (state.copilotOpen) toggleCopilot();
+    else if (state.focusMode && state.focusMode.type !== 'rollback') closeFocusMode();
+  }
+  if (state.focusMode?.type === 'test') {
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === 'p' || e.key === 'P') markCurrentTest('passed');
+    if (e.key === 'f' || e.key === 'F') markCurrentTest('failed');
+    if (e.key === 'b' || e.key === 'B') markCurrentTest('blocked');
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════════════════
+function shell(content) {
+  const u = state.user;
+  const perms = ROLE_PERMISSIONS[u.role];
+  const filteredNav = NAV_CONFIG.filter(n => perms.nav.includes(n.id));
+  return `
+    <div class="flex h-screen">
+      <aside class="w-60 flex-col desktop-sidebar" style="border-right: 1px solid var(--border); display: flex;">
+        <div class="h-14 px-4 flex items-center gap-2" style="border-bottom: 1px solid var(--border);">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+            ${icon('activity', 16)}
+          </div>
+          <div class="font-semibold text-sm display-font">SENTRA</div>
+        </div>
+        <nav class="flex-1 overflow-y-auto scroll py-2 space-y-0.5">
+          <LaTex>id_59</LaTex>{n.id}" class="nav-item ${state.view === n.id ? 'active' : ''}">
+                <span class="nav-icon">${icon(n.iconName, 16)}</span>
+                <span class="flex-1">${n.label}</span>
+                ${badge > 0 ? `<span class="pill pill-run" style="font-size: 10px;"><LaTex>id_58</LaTex>{u.color} flex items-center justify-center text-[11px] font-bold text-white"><LaTex>id_57</LaTex>{u.name}</div>
+            <div class="text-[10px] truncate" style="color: var(--text-dim);"><LaTex>id_56</LaTex>{icon('logOut', 14)}
+          </button>
+        </div>
+      </aside>
+      <main class="flex-1 flex flex-col min-w-0">
+        <LaTex>id_55</LaTex>{content}</div>
+      </main>
+    </div>
+  `;
+}
+
+function renderDashboard() {
+  const u = state.user;
+  const greetings = { manager: 'Good morning', tester: 'Ready to test', engineer: "Let's ship", auditor: 'Audit overview' };
+  render(shell(`
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="text-display-md mb-1"><LaTex>id_54</LaTex>{u.name.split(' ')[0]}</h1>
+        <p class="text-sm" style="color: var(--text-muted);">Here's your overview</p>
+      </div>
+      <div class="flex gap-2"><LaTex>id_53</LaTex>{renderAIInsightsWidget()}
+    <LaTex>id_52</LaTex>{['deployments','testing','activity'].map(t => `<button data-action="tab" data-value="${t}" class="tab-btn ${state.dashboardTab === t ? 'active' : ''}">${icon(t === 'deployments' ? 'rocket' : t === 'testing' ? 'flask' : 'activity', 12)} ${t}</button>`).join('')}
+    </div>
+    <LaTex>id_51</LaTex>{icon('rocket', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font">2</div>
+      </div>
+      <div class="card card-hover p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-label" style="color: var(--text-muted);">Pending</span>
+          <span style="color: var(--warning);"><LaTex>id_50</LaTex>{icon('checkCircle', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font" style="color: var(--success);">2</div>
+      </div>
+      <div class="card card-hover p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-label" style="color: var(--text-muted);">Success Rate</span>
+          <span style="color: var(--success);"><LaTex>id_49</LaTex>{renderTimeline()}
+  `;
+}
+
+function renderDashboardTesting() {
+  return `
+    <div class="metric-grid mb-6 stagger">
+      <div class="card card-hover p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-label" style="color: var(--text-muted);">Active Cycles</span>
+          <span style="color: var(--accent);"><LaTex>id_48</LaTex>{icon('checkCircle', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font" style="color: var(--success);">86%</div>
+      </div>
+      <div class="card card-hover p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-label" style="color: var(--text-muted);">Failed</span>
+          <span style="color: var(--danger);"><LaTex>id_47</LaTex>{icon('ban', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font" style="color: var(--warning);">21</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div class="card card-hover p-5">
+        <h3 class="text-sm font-semibold mb-4 display-font">Test Results Distribution</h3>
+        <div style="height: 260px;"><canvas id="donutChart"></canvas></div>
+      </div>
+      <div class="card card-hover p-5">
+        <h3 class="text-sm font-semibold mb-4 display-font">Module Coverage</h3>
+        <div style="height: 260px;"><canvas id="coverageChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card card-hover p-5"><LaTex>id_46</LaTex>{AUDIT.slice(0, 5).map(a => `
+          <div class="flex items-start gap-3 text-sm p-3 rounded-lg" style="background: var(--bg-hover);">
+            <div class="w-2 h-2 rounded-full mt-2 status-dot-info"></div>
+            <div class="flex-1">
+              <div>
+                <span class="font-semibold">${a.actor}</span>
+                <span style="color: var(--text-muted);"> ${a.action} </span>
+                <span class="font-medium">${a.entity}</span>
+              </div>
+              <div class="text-xs mono mt-1" style="color: var(--text-dim);">${a.time}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderAIInsightsWidget() {
+  const role = state.user?.role;
+  const insights = {
+    manager: { icon: 'target', title: 'Optimization opportunity', text: 'Friday deployments have 82% success vs 94% overall. Consider Tue-Thu.' },
+    tester: { icon: 'search', title: 'Pattern in test failures', text: '3 failed tests share MFA service root cause.' },
+    engineer: { icon: 'zap', title: 'Optimal deployment window', text: 'Today 2-4 PM has 97% success rate.' },
+    auditor: { icon: 'shieldCheck', title: 'Anomaly detected', text: 'Unusual access pattern from new IP for sarah@sentra.io.' }
+  };
+  const i = insights[role];
+  return `
+    <div class="ai-insight-card mb-6" onclick="toggleCopilot()">
+      <div class="flex items-start gap-3 relative">
+        <div class="copilot-logo flex-shrink-0">
+          <span class="ai-sparkle"><LaTex>id_45</LaTex>{icon(i.icon, 14)}</span>
+            <span class="text-sm font-semibold ai-gradient-text display-font"><LaTex>id_44</LaTex>{i.text}</div>
+        </div>
+        <span style="color: var(--ai);"><LaTex>id_43</LaTex>{icon('shieldCheck', 18)}</div>
+              <h3 class="font-semibold text-sm display-font">Approval Queue</h3>
+            </div>
+            <span class="pill pill-block">3</span>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 p-2.5 rounded-lg" style="background: var(--bg-hover);">
+              <div class="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-[10px] font-bold text-white">DP</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-medium truncate">Release 2.4.1 — Step 6</div>
+                <div class="text-[10px]" style="color: var(--text-muted);">David Park · 2m ago</div>
+              </div>
+              <button class="btn btn-primary text-[10px] btn-ripple" onclick="startDeploymentExecution()">Review</button>
+            </div>
+          </div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-header">
+            <div class="flex items-center gap-2">
+              <div class="widget-icon" style="background: rgba(99,102,241,0.15); color: var(--accent);"><LaTex>id_42</LaTex>{[{name:'Sarah Chen',rate:94},{name:'David Park',rate:98}].map(m => `
+              <div class="flex items-center gap-3">
+                <div class="flex-1">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="font-medium">${m.name}</span>
+                    <span class="mono" style="color: var(--text-muted);">${m.rate}%</span>
+                  </div>
+                  <div class="progress-bar progress-bar-sm">
+                    <div style="background: var(--success); width: ${m.rate}%;"></div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-header">
+            <div class="flex items-center gap-2">
+              <div class="widget-icon" style="background: rgba(239,68,68,0.15); color: var(--danger);">${icon('alertTriangle', 18)}</div>
+              <h3 class="font-semibold text-sm display-font">Risks</h3>
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg mb-2" style="background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15);">
+            <div class="text-xs font-medium flex items-center gap-1.5">
+              <LaTex>id_41</LaTex>{icon('alertTriangle', 12)} Coverage below target
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  if (role === 'tester') {
+    return `
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 stagger">
+        <div class="widget-card">
+          <div class="widget-header">
+            <div class="flex items-center gap-2">
+              <div class="widget-icon" style="background: rgba(16,185,129,0.15); color: var(--success);"><LaTex>id_40</LaTex>{[{id:'TC-2806',name:'Cart persistence'},{id:'TC-2807',name:'SSO redirect'}].map(t => `
+              <div class="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer card-hover" style="background: var(--bg-hover);" onclick="openTestFocusMode()">
+                <span class="mono text-[10px]" style="color: var(--text-dim);">${t.id}</span>
+                <div class="flex-1 text-xs truncate">${t.name}</div>
+                <span class="pill pill-pend">not-run</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-header">
+            <div class="flex items-center gap-2">
+              <div class="widget-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);"><LaTex>id_39</LaTex>{icon('rocket', 18)}</div>
+              <h3 class="font-semibold text-sm display-font">Active Deployments</h3>
+            </div>
+            <button class="btn btn-primary text-xs btn-ripple" onclick="startDeploymentExecution()">
+              <LaTex>id_38</LaTex>{icon('play', 10)} Running</span>
+            </div>
+            <div class="progress-bar mb-1">
+              <div style="background: var(--accent); width: 75%;"></div>
+            </div>
+            <div class="text-[10px] mono" style="color: var(--text-muted);">Step 6/8</div>
+          </div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-header">
+            <div class="flex items-center gap-2">
+              <div class="widget-icon" style="background: rgba(239,68,68,0.15); color: var(--danger);"><LaTex>id_37</LaTex>{icon('checkCircle', 18)}</div>
+              <h3 class="font-semibold text-sm display-font">Compliance</h3>
+            </div>
+          </div>
+          <div class="text-center py-4">
+            <div class="text-5xl font-bold display-font" style="color: var(--success);">98%</div>
+            <div class="text-xs mt-2" style="color: var(--text-muted);">SOC 2 Type II</div>
+          </div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-header">
+            <div class="flex items-center gap-2">
+              <div class="widget-icon" style="background: rgba(245,158,11,0.15); color: var(--warning);"><LaTex>id_36</LaTex>{icon('activity', 18)}</div>
+              <h3 class="font-semibold text-sm display-font">Audit Volume</h3>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex justify-between p-2.5 rounded-lg" style="background: var(--bg-hover);">
+              <span class="text-xs">Today</span>
+              <span class="font-bold mono kpi-value">12,847</span>
+            </div>
+            <div class="flex justify-between p-2.5 rounded-lg" style="background: var(--bg-hover);">
+              <span class="text-xs">This week</span>
+              <span class="font-bold mono kpi-value">84,291</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  return '';
+}
+
+function renderMyWork() {
+  render(shell(`
+    <div class="mb-6">
+      <h1 class="text-display-md mb-1">My work today</h1>
+      <p class="text-sm" style="color: var(--text-muted);">7 items · 3 high priority</p>
+    </div>
+    <LaTex>id_35</LaTex>{icon('play', 12)} Resume
+        </button>
+      </div>
+    </div>
+  `));
+}
+
+function renderProjects() {
+  if (state.user.role !== 'manager') {
+    render(shell(renderEmptyState('access')));
+    return;
+  }
+  render(shell(`
+    <div class="flex justify-between items-end mb-6">
+      <div>
+        <h1 class="text-display-md mb-1">Projects</h1>
+        <p class="text-sm" style="color: var(--text-muted);">Manage your projects</p>
+      </div>
+      <button class="btn btn-primary btn-ripple">
+        <LaTex>id_34</LaTex>{PROJECTS.map(p => `
+        <div class="card card-hover p-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-lg" style="background: ${p.color};">
+              ${p.name.charAt(0)}
+            </div>
+            <div class="flex-1">
+              <div class="font-semibold text-base display-font">${p.name}</div>
+              <div class="text-xs" style="color: var(--text-muted);">${p.status}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">Tests</div>
+              <div class="font-bold text-lg display-font kpi-value">${p.tests.toLocaleString()}</div>
+            </div>
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">Deploys</div>
+              <div class="font-bold text-lg display-font kpi-value">${p.deploys}</div>
+            </div>
+            <div class="p-3 rounded-lg text-center" style="background: var(--bg-hover);">
+              <div class="text-label" style="color: var(--text-muted);">Members</div>
+              <div class="font-bold text-lg display-font kpi-value">${p.members}</div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `));
+}
+
+function renderTesting() {
+  if (!['manager', 'tester'].includes(state.user.role)) {
+    render(shell(renderEmptyState('access')));
+    return;
+  }
+  const filtered = applyFilters(state.testCases, { status: 'status', assignee: 'assignee', module: 'module' });
+  const hasFilters = getActiveFilterCount() > 0;
+  const selectedCount = state.selectedTests.size;
+  const bulkBar = selectedCount > 0 ? `
+    <div class="bulk-action-bar">
+      <span class="text-sm font-medium"><strong>${selectedCount}</strong> selected</span>
+      <div class="flex-1"></div>
+      <button class="btn btn-subtle btn-ripple text-xs" data-action="bulk-clear">Clear</button>
+      <button class="btn btn-ripple text-xs text-white" style="background: var(--success);" data-action="bulk-pass">
+        <LaTex>id_33</LaTex>{icon('x', 12)} Fail
+      </button>
+    </div>
+  ` : '';
+  render(shell(`
+    <div class="flex flex-col lg:flex-row h-full gap-4">
+      <aside class="w-full lg:w-64 card p-3 flex flex-col">
+        <div class="flex-1 overflow-y-auto scroll"><LaTex>id_32</LaTex>{filtered.length}</span>
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-subtle btn-ripple text-xs" data-action="toggle-filters">
+              <LaTex>id_31</LaTex>{hasFilters ? `<span class="pill pill-info ml-1">${getActiveFilterCount()}</span>` : ''}
+            </button>
+            <button class="btn btn-subtle btn-ripple text-xs" onclick="openTestFocusMode()">
+              ${icon('play', 12)} Focus
+            </button>
+            <button class="btn btn-primary btn-ripple text-xs" data-action="new-test">
+              <LaTex>id_30</LaTex>{renderFilterPanel('testing')}
+        <div class="card overflow-hidden flex-1">
+          <div class="px-4 py-2 flex items-center gap-3" style="border-bottom: 1px solid var(--border); background: var(--bg-hover);">
+            <div class="checkbox-custom <LaTex>id_29</LaTex>{filtered.length === 0 && hasFilters ? renderEmptyState('filters') : `<div class="stagger">${filtered.map(tc => {
+            const isSelected = state.selectedTests.has(tc.id);
+            const isExpanded = state.expandedTest === tc.id;
+            const statusPill = tc.status === 'passed' ? 'pill-pass' : tc.status === 'failed' ? 'pill-fail' : tc.status === 'blocked' ? 'pill-block' : 'pill-pend';
+            const statusIcon = tc.status === 'passed' ? 'checkCircle' : tc.status === 'failed' ? 'xCircle' : tc.status === 'blocked' ? 'ban' : 'circle';
+            return `
+              <div class="test-row ${isSelected ? 'selected' : ''}" style="border-bottom: 1px solid var(--border);">
+                <div class="px-4 py-2.5 flex items-center gap-3 cursor-pointer" data-action="expand-test" data-value="<LaTex>id_28</LaTex>{isSelected ? 'checked' : ''}" onclick="event.stopPropagation(); toggleTestSelection('<LaTex>id_27</LaTex>{tc.id}</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm truncate"><LaTex>id_26</LaTex>{tc.priority === 'critical' ? `<span class="pill pill-critical text-[9px] mt-1">${icon('alertTriangle', 8)} Critical</span>` : ''}
+                  </div>
+                  <span class="pill ${statusPill}">
+                    <LaTex>id_25</LaTex>{tc.status}
+                  </span>
+                </div>
+                <LaTex>id_24</LaTex>{tc.desc}</div>
+                    <div class="flex gap-2 flex-wrap">
+                      <button class="btn btn-ripple text-xs text-white" style="background: var(--success);" onclick="state.testCases.find(t=>t.id==='${tc.id}').status='passed'; renderTesting();">
+                        ${icon('check', 12)} Pass
+                      </button>
+                      <button class="btn btn-subtle btn-ripple text-xs" onclick="openTestFocusMode(${state.testCases.findIndex(t=>t.id==='${tc.id}')})">
+                        ${icon('play', 12)} Focus
+                      </button>
+                      <button class="btn btn-ghost text-xs" onclick="openTestCaseEditor(state.testCases.find(t=>t.id==='${tc.id}'))">
+                        ${icon('edit', 12)} Edit
+                      </button>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}</div>`}
+        </div>
+      </div>
+    </div>
+    ${bulkBar}
+  `));
+}
+
+function renderDeployments() {
+  if (!['manager', 'engineer'].includes(state.user.role)) {
+    render(shell(renderEmptyState('access')));
+    return;
+  }
+  render(shell(`
+    <div class="flex justify-between items-end mb-6">
+      <div>
+        <h1 class="text-display-md mb-1">Deployments</h1>
+        <p class="text-sm" style="color: var(--text-muted);">Manage your deployments</p>
+      </div>
+      <button class="btn btn-primary btn-ripple text-sm" onclick="startDeploymentExecution()">
+        <LaTex>id_23</LaTex>{renderAIInsightsWidget()}
+    <div class="card card-hover overflow-hidden mb-6 stagger">
+      <LaTex>id_22</LaTex>{d.name}</span>
+              <span class="pill ${d.status === 'running' ? 'pill-run' : 'pill-pass'}">
+                ${icon(d.status === 'running' ? 'play' : 'checkCircle', 10)} ${d.status}
+              </span>
+            </div>
+            <div class="text-xs" style="color: var(--text-muted);">${d.project} · ${d.engineer}</div>
+          </div>
+          <div class="text-right text-xs mono">
+            <div class="font-semibold">${d.done}/${d.steps}</div>
+            <div style="color: var(--text-dim);">${d.status === 'running' ? 'ETA ' + d.eta : d.duration || ''}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <LaTex>id_21</LaTex>{icon('plus', 12)} New Template
+      </button>
+    </div>
+    <div class="card card-hover overflow-hidden stagger">
+      <LaTex>id_20</LaTex>{t.type === 'test' ? 'var(--success)' : 'var(--accent)'};">${icon(t.type === 'test' ? 'flask' : 'rocket', 20)}</span>
+          <div class="flex-1">
+            <div class="font-medium text-sm">${t.name}</div>
+            <div class="text-xs" style="color: var(--text-muted);">${t.ver} · ${t.author}</div>
+          </div>
+          <span class="pill ${t.status === 'published' ? 'pill-pass' : 'pill-pend'}">${t.status}</span>
+        </div>
+      `).join('')}
+    </div>
+  `));
+}
+
+function renderSuggestions() {
+  if (!['manager', 'tester', 'engineer'].includes(state.user.role)) {
+    render(shell(renderEmptyState('access')));
+    return;
+  }
+  const filtered = applyFilters(SUGGESTIONS, { status: 'status', priority: 'priority' });
+  render(shell(`
+    <div class="flex justify-between items-end mb-6">
+      <div>
+        <h1 class="text-display-md mb-1">Suggestions</h1>
+        <p class="text-sm" style="color: var(--text-muted);">Ideas for improvement</p>
+      </div>
+      <button class="btn btn-primary btn-ripple text-sm" onclick="openSuggestionSubmission()">
+        <LaTex>id_19</LaTex>{renderAIInsightsWidget()}
+    <LaTex>id_18</LaTex>{filtered.map(s => `
+        <div class="card card-hover p-4 cursor-pointer" onclick="openSuggestionDetail('${s.id}')">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="font-semibold text-sm">${s.title}</span>
+            <span class="pill ${s.priority === 'high' ? 'pill-fail' : 'pill-block'}">
+              ${icon('flame', 10)} ${s.priority}
+            </span>
+            <span class="pill pill-info">${s.type}</span>
+            <span class="pill ${s.status === 'approved' ? 'pill-pass' : 'pill-run'}">
+              ${icon(s.status === 'approved' ? 'checkCircle' : 'clock', 10)} ${s.status}
+            </span>
+          </div>
+          <div class="text-xs" style="color: var(--text-muted);">${s.submitter} · ${s.time}</div>
+        </div>
+      `).join('')}
+    </div>
+  `));
+}
+
+function renderAudit() {
+  if (!['manager', 'auditor'].includes(state.user.role)) {
+    render(shell(renderEmptyState('access')));
+    return;
+  }
+  const isAuditor = state.user.role === 'auditor';
+  render(shell(`
+    <div class="flex justify-between items-end mb-6">
+      <div>
+        <h1 class="text-display-md mb-1">Audit Center ${isAuditor ? '<span class="pill pill-info ml-2">Read-only</span>' : ''}</h1>
+        <p class="text-sm" style="color: var(--text-muted);">Complete audit trail</p>
+      </div>
+      <button class="btn btn-subtle btn-ripple text-sm" onclick="exportCSV()">
+        <LaTex>id_17</LaTex>{renderAIInsightsWidget()}
+    <div class="card card-hover overflow-hidden stagger">
+      <LaTex>id_16</LaTex>{e.id}</span>
+          <div class="w-28 font-medium">${e.actor}</div>
+          <span class="pill pill-pend mono text-[10px]">${e.action}</span>
+          <div class="flex-1 truncate">${e.entity}</div>
+          <span class="mono text-xs" style="color: var(--text-dim);">${e.time}</span>
+        </div>
+      `).join('')}
+    </div>
+  `));
+}
+
+function renderReports() {
+  if (!['manager', 'auditor'].includes(state.user.role)) {
+    render(shell(renderEmptyState('access')));
+    return;
+  }
+  render(shell(`
+    <div class="flex justify-between items-end mb-6">
+      <div>
+        <h1 class="text-display-md mb-1">Reports & Analytics</h1>
+        <p class="text-sm" style="color: var(--text-muted);">Comprehensive insights</p>
+      </div>
+      <div class="flex gap-2">
+        <LaTex>id_15</LaTex>{icon('download', 14)} Export
+        </button>
+      </div>
+    </div>
+    <LaTex>id_14</LaTex>{icon('activity', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font">247</div>
+        <div class="text-xs mt-2 flex items-center gap-1" style="color: var(--success);">
+          <LaTex>id_13</LaTex>{icon('clock', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font">4.2h</div>
+        <div class="text-xs mt-2 flex items-center gap-1" style="color: var(--success);">
+          <LaTex>id_12</LaTex>{icon('checkCircle', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font" style="color: var(--success);">86.3%</div>
+        <div class="text-xs mt-2 flex items-center gap-1" style="color: var(--success);">
+          <LaTex>id_11</LaTex>{icon('rocket', 14)}</span>
+        </div>
+        <div class="text-3xl font-bold kpi-value display-font" style="color: var(--success);">94.1%</div>
+        <div class="text-xs mt-2 flex items-center gap-1" style="color: var(--success);">
+          <LaTex>id_10</LaTex>{state.dateRange}</h3>
+        <div style="height: 300px;"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="card card-hover p-5">
+        <h3 class="text-sm font-semibold mb-4 display-font">Results Distribution</h3>
+        <div style="height: 300px;"><canvas id="reportDonut"></canvas></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div class="card card-hover p-5">
+        <h3 class="text-sm font-semibold mb-4 display-font">Coverage by Module</h3>
+        <div style="height: 280px;"><canvas id="reportBar"></canvas></div>
+      </div>
+      <div class="card card-hover p-5">
+        <h3 class="text-sm font-semibold mb-4 display-font">Team Performance</h3>
+        <div class="space-y-3 stagger">
+          <LaTex>id_9</LaTex>{m.avatar}</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-xs font-semibold">${m.name}</span>
+                  <span class="text-xs mono" style="color: var(--text-muted);">${m.tests} tests · ${m.passRate}%</span>
+                </div>
+                <div class="progress-bar progress-bar-sm">
+                  <div style="background: var(--success); width: ${m.passRate}%;"></div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="card card-hover p-5 mb-6"><LaTex>id_8</LaTex>{renderTimeline()}
+  `));
+  setTimeout(() => {
+    renderLineChart('trendChart', CHART_DATA.trend[state.dateRange]);
+    renderDonutChart('reportDonut', [{label:'Passed',value:794,color:'#10b981'},{label:'Failed',value:48,color:'#ef4444'},{label:'Blocked',value:21,color:'#f59e0b'},{label:'Not Run',value:66,color:'#64748b'}]);
+    renderBarChart('reportBar', CHART_DATA.coverage.map(c => ({label: c.module, value: c.coverage})), { horizontal: true, max: 100 });
+  }, 100);
+}
+
+function renderSettings() {
+  render(shell(`
+    <div class="mb-6">
+      <h1 class="text-display-md mb-1">Settings</h1>
+      <p class="text-sm" style="color: var(--text-muted);">Manage your preferences</p>
+    </div>
+    <div class="card card-hover p-6 mb-4">
+      <h3 class="text-sm font-semibold mb-5 display-font">Profile</h3>
+      <div class="flex items-center gap-4 mb-5">
+        <div class="w-16 h-16 rounded-full <LaTex>id_7</LaTex>{state.user.initials}</div>
+        <div>
+          <div class="text-base font-semibold display-font"><LaTex>id_6</LaTex>{state.user.title}</div>
+          <div class="text-xs" style="color: var(--text-dim);"><LaTex>id_5</LaTex>{state.user.name}" <LaTex>id_4</LaTex>{state.user.email}" <LaTex>id_3</LaTex>{icon(state.theme === 'dark' ? 'moon' : 'sun', 16)}
+          <div>
+            <div class="text-sm font-semibold">Theme</div>
+            <div class="text-xs" style="color: var(--text-muted);">Currently <LaTex>id_2</LaTex>{state.user.color} flex items-center justify-center text-xs font-bold text-white"><LaTex>id_1</LaTex>{state.user.title}</div>
+            <div class="text-[10px]" style="color: var(--text-muted);">${state.user.role}</div>
+          </div>
+        </div>
+        <div class="text-xs
