@@ -2210,3 +2210,827 @@ function navigate(view) {
 }
 
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// PART 4: HELPER FUNCTIONS & INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════════════════════════
+function applyFilters(items, filterMap) {
+  return items.filter(item => {
+    for (const [filterKey, itemKey] of Object.entries(filterMap)) {
+      if (state.activeFilters[filterKey] && state.activeFilters[filterKey].length > 0) {
+        if (!state.activeFilters[filterKey].includes(item[itemKey])) {
+          return false;
+        }
+      }
+    }
+    return true;
+  });
+}
+
+function toggleFilters() {
+  state.filtersOpen = !state.filtersOpen;
+  renderTesting();
+}
+
+function getActiveFilterCount() {
+  return Object.values(state.activeFilters).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+}
+
+function renderFilterPanel(type) {
+  if (!state.filtersOpen) return '';
+  
+  const filtersByType = {
+    testing: [
+      { key: 'status', label: 'Status', options: ['passed', 'failed', 'blocked', 'not-run'] },
+      { key: 'priority', label: 'Priority', options: ['high', 'medium', 'low', 'critical'] },
+      { key: 'assignee', label: 'Assignee', options: ['Sarah Chen', 'Mike Johnson', 'Alex Kumar'] },
+      { key: 'module', label: 'Module', options: ['Auth', 'Cart', 'Security', 'Payments'] }
+    ],
+    suggestions: [
+      { key: 'status', label: 'Status', options: ['submitted', 'under_review', 'approved'] },
+      { key: 'priority', label: 'Priority', options: ['high', 'medium', 'low'] },
+      { key: 'type', label: 'Type', options: ['test', 'deployment', 'process'] }
+    ]
+  };
+  
+  const filters = filtersByType[type] || [];
+  
+  return `
+    <div class="filter-panel mt-3">
+      <div class="space-y-3">
+        ${filters.map(f => `
+          <div>
+            <div class="text-xs font-semibold mb-2" style="color: var(--text-muted);">${f.label}</div>
+            <div class="flex flex-wrap gap-2">
+              ${f.options.map(opt => {
+                const isActive = state.activeFilters[f.key]?.includes(opt);
+                return `
+                  <div class="filter-chip ${isActive ? 'active' : ''}" 
+                       onclick="toggleFilter('${f.key}', '${opt}')">
+                    ${opt}
+                    ${isActive ? icon('x', 'icon-xs') : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      
+      ${getActiveFilterCount() > 0 ? `
+        <div class="flex gap-2 mt-4 pt-4" style="border-top: 1px solid var(--border);">
+          <button class="btn btn-ghost btn-sm" onclick="clearFilters()">
+            ${icon('x', 'icon-sm')} Clear All
+          </button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function toggleFilter(key, value) {
+  if (!state.activeFilters[key]) {
+    state.activeFilters[key] = [];
+  }
+  
+  const idx = state.activeFilters[key].indexOf(value);
+  if (idx > -1) {
+    state.activeFilters[key].splice(idx, 1);
+    if (state.activeFilters[key].length === 0) {
+      delete state.activeFilters[key];
+    }
+  } else {
+    state.activeFilters[key].push(value);
+  }
+  
+  renderTesting();
+}
+
+function clearFilters() {
+  state.activeFilters = {};
+  renderTesting();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATE PICKER
+// ═══════════════════════════════════════════════════════════════
+function renderDatePicker() {
+  const ranges = ['7d', '30d', '90d', '1y'];
+  
+  return `
+    <div class="date-picker">
+      ${ranges.map(range => `
+        <button class="${state.dateRange === range ? 'active' : ''}" 
+                onclick="setDateRange('${range}')">
+          ${range}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function setDateRange(range) {
+  state.dateRange = range;
+  if (state.view === 'reports') {
+    renderReports();
+  } else if (state.view === 'audit') {
+    renderAudit();
+  }
+  toast(`Date range set to ${range}`, 'info');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+function toggleNotifications() {
+  state.notifDropdownOpen = !state.notifDropdownOpen;
+  
+  if (state.view === 'dashboard') renderDashboard();
+  else if (state.view === 'testing') renderTesting();
+  else if (state.view === 'deployments') renderDeployments();
+  else if (state.view === 'audit') renderAudit();
+  else if (state.view === 'reports') renderReports();
+  else if (state.view === 'settings') renderSettings();
+}
+
+function renderNotificationsDropdown() {
+  if (!state.notifDropdownOpen) return '';
+  
+  return `
+    <div class="notif-dropdown">
+      <div class="p-4" style="border-bottom: 1px solid var(--border);">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-semibold">Notifications</h3>
+          <button class="btn btn-ghost btn-sm" onclick="markAllNotificationsRead()">
+            Mark all read
+          </button>
+        </div>
+      </div>
+      
+      <div class="max-h-96 overflow-y-auto scroll">
+        ${state.notifications.length === 0 ? `
+          <div class="p-8 text-center" style="color: var(--text-muted);">
+            ${icon('bell', 'icon-2xl')}
+            <div class="text-sm mt-2">No notifications</div>
+          </div>
+        ` : state.notifications.map(notif => `
+          <div class="notif-item ${notif.read ? '' : 'unread'}" 
+               onclick="markNotificationRead('${notif.id}'); navigate('${notif.link}');">
+            <div class="flex items-start gap-3">
+              <div class="notif-icon" style="color: ${notif.color};">
+                ${icon(notif.iconName, 'icon-md')}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium mb-1">${notif.title}</div>
+                <div class="text-xs" style="color: var(--text-muted);">${notif.desc}</div>
+                <div class="text-xs mt-1" style="color: var(--text-dim);">${notif.time}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function markNotificationRead(id) {
+  const notif = state.notifications.find(n => n.id === id);
+  if (notif) {
+    notif.read = true;
+  }
+  state.notifDropdownOpen = false;
+}
+
+function markAllNotificationsRead() {
+  state.notifications.forEach(n => n.read = true);
+  state.notifDropdownOpen = false;
+  toast('All notifications marked as read', 'success');
+  if (state.view === 'dashboard') renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COPILOT
+// ═══════════════════════════════════════════════════════════════
+function toggleCopilot() {
+  state.copilotOpen = !state.copilotOpen;
+  
+  const copilotRoot = document.getElementById('copilot-root');
+  if (state.copilotOpen) {
+    copilotRoot.innerHTML = renderCopilotPanel();
+  } else {
+    copilotRoot.innerHTML = '';
+  }
+}
+
+function renderCopilotPanel() {
+  return `
+    <div class="copilot-panel">
+      <div class="copilot-header">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" 
+             style="background: linear-gradient(135deg, var(--ai), var(--ai-2));">
+          ${icon('sparkles', 'icon-md', 'text-white ai-sparkle')}
+        </div>
+        <div class="flex-1">
+          <div class="font-semibold text-sm">AI Copilot</div>
+          <div class="text-xs" style="color: var(--text-muted);">Ask anything</div>
+        </div>
+        <button class="btn btn-ghost" onclick="toggleCopilot()">
+          ${icon('x', 'icon-md')}
+        </button>
+      </div>
+      
+      <div class="copilot-messages scroll">
+        ${state.copilotMessages.length === 0 ? `
+          <div class="copilot-msg ai">
+            <div class="flex items-center gap-2 mb-2">
+              ${icon('sparkles', 'icon-sm', 'ai-sparkle')}
+              <span class="font-semibold text-xs">SENTRA AI</span>
+            </div>
+            <div class="text-sm">
+              Hi! I'm your AI assistant. I can help you:
+              <ul class="mt-2 space-y-1">
+                <li>• Analyze test failures</li>
+                <li>• Generate test cases</li>
+                <li>• Score deployment risks</li>
+                <li>• Provide insights</li>
+              </ul>
+              <div class="mt-2">What would you like help with?</div>
+            </div>
+          </div>
+        ` : state.copilotMessages.map(msg => `
+          <div class="copilot-msg ${msg.role}">
+            ${msg.content}
+          </div>
+        `).join('')}
+        
+        ${state.copilotTyping ? `
+          <div class="copilot-typing">
+            <span></span><span></span><span></span>
+          </div>
+        ` : ''}
+      </div>
+      
+      <div class="copilot-input-area">
+        <div class="copilot-input-wrap">
+          <textarea class="copilot-input" 
+                    id="copilot-input"
+                    placeholder="Ask me anything..." 
+                    rows="1"
+                    onkeydown="handleCopilotKeydown(event)"></textarea>
+          <button class="copilot-send" onclick="sendCopilotMessage()">
+            ${icon('send', 'icon-md')}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function handleCopilotKeydown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendCopilotMessage();
+  }
+}
+
+function sendCopilotMessage() {
+  const input = document.getElementById('copilot-input');
+  const message = input?.value?.trim();
+  
+  if (!message) return;
+  
+  // Add user message
+  state.copilotMessages.push({
+    role: 'user',
+    content: message
+  });
+  
+  input.value = '';
+  
+  // Show typing indicator
+  state.copilotTyping = true;
+  document.getElementById('copilot-root').innerHTML = renderCopilotPanel();
+  
+  // Simulate AI response after delay
+  setTimeout(() => {
+    state.copilotTyping = false;
+    
+    // Generate contextual response
+    let response = '';
+    const lowerMsg = message.toLowerCase();
+    
+    if (lowerMsg.includes('test') && lowerMsg.includes('fail')) {
+      response = `
+        <div class="flex items-center gap-2 mb-2">
+          ${icon('sparkles', 'icon-sm', 'ai-sparkle')}
+          <span class="font-semibold text-xs">SENTRA AI</span>
+        </div>
+        <div class="text-sm">
+          I found <strong>3 failed tests</strong> with a common pattern:
+          <ul class="mt-2 space-y-1">
+            <li>• TC-2804: Password reset email</li>
+            <li>• TC-2805: MFA on suspicious IP</li>
+            <li>• TC-2808: Session invalidation</li>
+          </ul>
+          <div class="mt-2">
+            <strong>Root cause:</strong> MFA service degradation detected.
+          </div>
+          <div class="mt-2">
+            <strong>Recommendation:</strong> Investigate MFA service health and consider adding retry logic.
+          </div>
+        </div>
+      `;
+    } else if (lowerMsg.includes('generate') || lowerMsg.includes('create')) {
+      response = `
+        <div class="flex items-center gap-2 mb-2">
+          ${icon('sparkles', 'icon-sm', 'ai-sparkle')}
+          <span class="font-semibold text-xs">SENTRA AI</span>
+        </div>
+        <div class="text-sm">
+          I can generate test cases for you! Here are 3 suggestions:
+          <ul class="mt-2 space-y-2">
+            <li>
+              <strong>TC-NEW-001:</strong> Test password complexity validation
+              <div class="text-xs mt-1" style="color: var(--text-muted);">Verify passwords meet complexity requirements</div>
+            </li>
+            <li>
+              <strong>TC-NEW-002:</strong> Test account lockout after failed attempts
+              <div class="text-xs mt-1" style="color: var(--text-muted);">Verify account locks after 5 failed attempts</div>
+            </li>
+            <li>
+              <strong>TC-NEW-003:</strong> Test session timeout
+              <div class="text-xs mt-1" style="color: var(--text-muted);">Verify session expires after inactivity</div>
+            </li>
+          </ul>
+          <div class="mt-2">Would you like me to add these to your test suite?</div>
+        </div>
+      `;
+    } else if (lowerMsg.includes('risk') || lowerMsg.includes('deployment')) {
+      response = `
+        <div class="flex items-center gap-2 mb-2">
+          ${icon('sparkles', 'icon-sm', 'ai-sparkle')}
+          <span class="font-semibold text-xs">SENTRA AI</span>
+        </div>
+        <div class="text-sm">
+          <strong>Deployment Risk Score: 72/100</strong>
+          <div class="mt-2">
+            <strong>Risk Factors:</strong>
+            <ul class="mt-1 space-y-1">
+              <li>• Database migration involves schema changes</li>
+              <li>• Deploying during peak hours (2-4 PM)</li>
+              <li>• No rollback plan defined</li>
+            </ul>
+          </div>
+          <div class="mt-2">
+            <strong>Recommendations:</strong>
+            <ul class="mt-1 space-y-1">
+              <li>• Schedule deployment during off-peak hours</li>
+              <li>• Create rollback plan before proceeding</li>
+              <li>• Test migration on staging first</li>
+            </ul>
+          </div>
+        </div>
+      `;
+    } else {
+      response = `
+        <div class="flex items-center gap-2 mb-2">
+          ${icon('sparkles', 'icon-sm', 'ai-sparkle')}
+          <span class="font-semibold text-xs">SENTRA AI</span>
+        </div>
+        <div class="text-sm">
+          I understand you're asking about: <strong>"${message}"</strong>
+          <div class="mt-2">
+            Based on your workspace data, here's what I found:
+            <ul class="mt-2 space-y-1">
+              <li>• 2,847 tests executed with 94.2% pass rate</li>
+              <li>• 142 deployments completed successfully</li>
+              <li>• 7 critical issues currently open</li>
+            </ul>
+          </div>
+          <div class="mt-2">
+            Can you be more specific about what you'd like help with? I can analyze failures, generate tests, or score deployment risks.
+          </div>
+        </div>
+      `;
+    }
+    
+    state.copilotMessages.push({
+      role: 'ai',
+      content: response
+    });
+    
+    document.getElementById('copilot-root').innerHTML = renderCopilotPanel();
+    
+    // Scroll to bottom
+    setTimeout(() => {
+      const messagesDiv = document.querySelector('.copilot-messages');
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }, 100);
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════════
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEST FOCUS MODE
+// ═══════════════════════════════════════════════════════════════
+function openTestFocusMode(testIndex = 0) {
+  const app = document.getElementById('app');
+  
+  // Initialize test cases if not already done
+  if (state.testCases.length === 0) {
+    state.testCases = JSON.parse(JSON.stringify(INITIAL_TEST_CASES));
+  }
+  
+  const currentTest = state.testCases[testIndex] || state.testCases[0];
+  
+  app.innerHTML = `
+    <div class="focus-overlay">
+      <!-- Header -->
+      <div class="h-16 px-6 flex items-center justify-between" style="border-bottom: 1px solid var(--border);">
+        <div class="flex items-center gap-3">
+          <button class="btn btn-ghost" onclick="closeFocusMode()">
+            ${icon('arrowLeft', 'icon-md')} Back
+          </button>
+          <div class="h-6 w-px" style="background: var(--border);"></div>
+          <div>
+            <div class="text-xs" style="color: var(--text-muted);">Test Focus Mode</div>
+            <div class="font-semibold text-sm">${currentTest.name}</div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <span class="pill pill-run">
+            ${testIndex + 1} of ${state.testCases.length}
+          </span>
+          <button class="btn btn-ai btn-sm btn-ripple" onclick="toggleCopilot()">
+            ${icon('sparkles', 'icon-sm')} AI Help
+          </button>
+        </div>
+      </div>
+      
+      <!-- Content -->
+      <div class="flex-1 flex overflow-hidden">
+        <!-- Left: Test List -->
+        <div class="w-80 overflow-y-auto scroll" style="border-right: 1px solid var(--border);">
+          <div class="p-4">
+            <div class="text-xs font-semibold mb-3" style="color: var(--text-muted);">All Tests</div>
+            <div class="space-y-1">
+              ${state.testCases.map((tc, idx) => `
+                <div class="p-2 rounded-lg cursor-pointer transition ${idx === testIndex ? 'bg-indigo-500/10 border border-indigo-500/30' : 'hover:bg-slate-800/30'}"
+                     onclick="openTestFocusMode(${idx})">
+                  <div class="flex items-center gap-2">
+                    <span class="pill pill-${tc.status === 'passed' ? 'pass' : tc.status === 'failed' ? 'fail' : tc.status === 'blocked' ? 'block' : 'pend'}">
+                      ${tc.status}
+                    </span>
+                    <span class="text-xs mono" style="color: var(--text-dim);">${tc.id}</span>
+                  </div>
+                  <div class="text-xs mt-1 truncate">${tc.name}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Center: Test Details -->
+        <div class="flex-1 overflow-y-auto scroll p-6">
+          <div class="max-w-2xl mx-auto">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="mono text-xs" style="color: var(--text-dim);">${currentTest.id}</span>
+              <span class="pill pill-${currentTest.status === 'passed' ? 'pass' : currentTest.status === 'failed' ? 'fail' : currentTest.status === 'blocked' ? 'block' : 'pend'}">
+                ${currentTest.status}
+              </span>
+              ${currentTest.priority ? `
+                <span class="pill pill-${currentTest.priority === 'high' ? 'fail' : currentTest.priority === 'medium' ? 'block' : 'pend'}">
+                  ${currentTest.priority} priority
+                </span>
+              ` : ''}
+            </div>
+            
+            <h1 class="text-2xl font-bold mb-4">${currentTest.name}</h1>
+            
+            <div class="text-sm mb-6" style="color: var(--text-muted);">
+              ${currentTest.desc}
+            </div>
+            
+            ${currentTest.note ? `
+              <div class="card p-4 mb-6" style="background: rgba(245,158,11,0.05); border-color: var(--warning);">
+                <div class="flex items-start gap-2">
+                  ${icon('alertTriangle', 'icon-md', 'text-amber-500')}
+                  <div>
+                    <div class="font-semibold text-sm mb-1">Note</div>
+                    <div class="text-sm" style="color: var(--text-muted);">${currentTest.note}</div>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+            
+            <div class="grid grid-cols-3 gap-2 mb-6">
+              <button class="btn btn-success btn-lg btn-ripple" 
+                      onclick="markCurrentTest('passed', ${testIndex})">
+                ${icon('check', 'icon-md')} Pass
+              </button>
+              <button class="btn btn-danger btn-lg btn-ripple" 
+                      onclick="markCurrentTest('failed', ${testIndex})">
+                ${icon('x', 'icon-md')} Fail
+              </button>
+              <button class="btn btn-subtle btn-lg btn-ripple" 
+                      onclick="markCurrentTest('blocked', ${testIndex})">
+                ${icon('ban', 'icon-md')} Block
+              </button>
+            </div>
+            
+            <div class="card p-4">
+              <h3 class="font-semibold mb-3">Add Comment</h3>
+              <textarea class="w-full text-sm" rows="3" placeholder="Add your observations..."></textarea>
+              <button class="btn btn-primary btn-sm btn-ripple mt-3">Save Comment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function markCurrentTest(status, testIndex) {
+  state.testCases[testIndex].status = status;
+  toast(`Test marked as ${status}`, status === 'passed' ? 'success' : status === 'failed' ? 'error' : 'warning');
+  
+  // Move to next test
+  const nextIndex = testIndex + 1;
+  if (nextIndex < state.testCases.length) {
+    setTimeout(() => {
+      openTestFocusMode(nextIndex);
+    }, 500);
+  } else {
+    toast('All tests completed!', 'success');
+    setTimeout(() => {
+      closeFocusMode();
+      navigate('testing');
+    }, 1500);
+  }
+}
+
+function closeFocusMode() {
+  navigate('testing');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEST CASE EDITOR
+// ═══════════════════════════════════════════════════════════════
+function openTestCaseEditor(testCase = null) {
+  const modal = document.getElementById('modal-root');
+  const isEdit = testCase !== null;
+  const tc = testCase || {
+    id: '',
+    name: '',
+    module: '',
+    assignee: '',
+    priority: 'medium',
+    desc: '',
+    status: 'not-run'
+  };
+  
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeModal()">
+      <div class="modal-content p-6" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold">${isEdit ? 'Edit' : 'Create'} Test Case</h2>
+          <button class="btn btn-ghost" onclick="closeModal()">
+            ${icon('x', 'icon-lg')}
+          </button>
+        </div>
+        
+        <form onsubmit="event.preventDefault(); saveTestCase(${isEdit ? `'${tc.id}'` : 'null'});">
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Test ID <span class="form-required">*</span></label>
+                <input type="text" id="tc-id" value="${tc.id}" required ${isEdit ? 'readonly' : ''} 
+                       placeholder="TC-2809" ${isEdit ? 'style="opacity: 0.6;"' : ''}>
+              </div>
+              <div>
+                <label class="form-label">Module</label>
+                <select id="tc-module">
+                  <option value="">Select module</option>
+                  <option value="Auth" ${tc.module === 'Auth' ? 'selected' : ''}>Auth</option>
+                  <option value="Cart" ${tc.module === 'Cart' ? 'selected' : ''}>Cart</option>
+                  <option value="Security" ${tc.module === 'Security' ? 'selected' : ''}>Security</option>
+                  <option value="Payments" ${tc.module === 'Payments' ? 'selected' : ''}>Payments</option>
+                </select>
+              </div>
+            </div>
+            
+            <div>
+              <label class="form-label">Name <span class="form-required">*</span></label>
+              <input type="text" id="tc-name" value="${tc.name}" required placeholder="Test case name">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="form-label">Assignee</label>
+                <select id="tc-assignee">
+                  <option value="">Select assignee</option>
+                  <option value="Sarah Chen" ${tc.assignee === 'Sarah Chen' ? 'selected' : ''}>Sarah Chen</option>
+                  <option value="Mike Johnson" ${tc.assignee === 'Mike Johnson' ? 'selected' : ''}>Mike Johnson</option>
+                  <option value="Alex Kumar" ${tc.assignee === 'Alex Kumar' ? 'selected' : ''}>Alex Kumar</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Priority</label>
+                <select id="tc-priority">
+                  <option value="low" ${tc.priority === 'low' ? 'selected' : ''}>Low</option>
+                  <option value="medium" ${tc.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                  <option value="high" ${tc.priority === 'high' ? 'selected' : ''}>High</option>
+                  <option value="critical" ${tc.priority === 'critical' ? 'selected' : ''}>Critical</option>
+                </select>
+              </div>
+            </div>
+            
+            <div>
+              <label class="form-label">Description</label>
+              <textarea id="tc-desc" rows="4" placeholder="Describe what this test validates">${tc.desc || ''}</textarea>
+            </div>
+          </div>
+          
+          <div class="flex gap-2 mt-6 pt-4" style="border-top: 1px solid var(--border);">
+            <button type="button" class="btn btn-ghost flex-1" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary flex-1 btn-ripple">
+              ${icon('check', 'icon-sm')} ${isEdit ? 'Update' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function saveTestCase(editId) {
+  const id = document.getElementById('tc-id').value;
+  const name = document.getElementById('tc-name').value;
+  const module = document.getElementById('tc-module').value;
+  const assignee = document.getElementById('tc-assignee').value;
+  const priority = document.getElementById('tc-priority').value;
+  const desc = document.getElementById('tc-desc').value;
+  
+  if (!id || !name) {
+    toast('Please fill in all required fields', 'error');
+    return;
+  }
+  
+  if (editId) {
+    // Edit existing
+    const tc = state.testCases.find(t => t.id === editId);
+    if (tc) {
+      tc.name = name;
+      tc.module = module;
+      tc.assignee = assignee;
+      tc.priority = priority;
+      tc.desc = desc;
+      toast('Test case updated successfully', 'success');
+    }
+  } else {
+    // Create new
+    state.testCases.push({
+      id,
+      name,
+      module,
+      assignee,
+      priority,
+      desc,
+      status: 'not-run',
+      dur: '—'
+    });
+    toast('Test case created successfully', 'success');
+  }
+  
+  closeModal();
+  renderTesting();
+}
+
+function closeTestCaseEditor() {
+  closeModal();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  // Command palette: Cmd+K or Ctrl+K
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    openCommandPalette();
+  }
+  
+  // Close modals: Escape
+  if (e.key === 'Escape') {
+    if (state.cmdPaletteOpen) {
+      closeCommandPalette();
+    } else if (state.copilotOpen) {
+      toggleCopilot();
+    } else if (document.getElementById('modal-root').innerHTML) {
+      closeModal();
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// COMMAND PALETTE
+// ═══════════════════════════════════════════════════════════════
+function openCommandPalette() {
+  state.cmdPaletteOpen = true;
+  
+  const modal = document.getElementById('modal-root');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeCommandPalette()">
+      <div class="modal-content p-0" onclick="event.stopPropagation()" style="max-width: 600px;">
+        <div class="p-4" style="border-bottom: 1px solid var(--border);">
+          <div class="flex items-center gap-3">
+            ${icon('search', 'icon-lg')}
+            <input type="text" id="command-search" class="flex-1 text-sm" 
+                   placeholder="Type a command or search..." 
+                   oninput="filterCommands(this.value)"
+                   autofocus>
+            <kbd class="kbd">ESC</kbd>
+          </div>
+        </div>
+        
+        <div class="max-h-96 overflow-y-auto scroll p-2" id="command-list">
+          ${renderCommandList(COMMANDS)}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    document.getElementById('command-search')?.focus();
+  }, 100);
+}
+
+function renderCommandList(commands) {
+  if (commands.length === 0) {
+    return `
+      <div class="p-8 text-center" style="color: var(--text-muted);">
+        ${icon('search', 'icon-2xl')}
+        <div class="text-sm mt-2">No commands found</div>
+      </div>
+    `;
+  }
+  
+  return commands.map(cmd => `
+    <div class="p-3 rounded-lg cursor-pointer hover:bg-slate-800/30 transition flex items-center gap-3"
+         onclick="executeCommand('${cmd.id}')">
+      ${icon(cmd.iconName, 'icon-md')}
+      <div class="flex-1">
+        <div class="text-sm font-medium">${cmd.label}</div>
+        ${cmd.keywords ? `<div class="text-xs" style="color: var(--text-muted);">${cmd.keywords}</div>` : ''}
+      </div>
+      ${icon('arrowRight', 'icon-sm')}
+    </div>
+  `).join('');
+}
+
+function filterCommands(query) {
+  const filtered = COMMANDS.filter(cmd => {
+    const searchStr = `${cmd.label} ${cmd.keywords || ''}`.toLowerCase();
+    return searchStr.includes(query.toLowerCase());
+  });
+  
+  document.getElementById('command-list').innerHTML = renderCommandList(filtered);
+}
+
+function executeCommand(cmdId) {
+  const cmd = COMMANDS.find(c => c.id === cmdId);
+  if (cmd) {
+    closeCommandPalette();
+    cmd.action();
+  }
+}
+
+function closeCommandPalette() {
+  state.cmdPaletteOpen = false;
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+// Initialize test cases from mock data
+state.testCases = JSON.parse(JSON.stringify(INITIAL_TEST_CASES));
+state.notifications = JSON.parse(JSON.stringify(INITIAL_NOTIFICATIONS));
+
+// Start the app
+console.log('🚀 SENTRA Core Execution Platform initialized');
+navigate('login');
+
